@@ -9,6 +9,13 @@ module.exports = {
   getNow,
   getToday,
   getYesterday,
+  isDateRelativeToToday,
+  isDatePartToday,
+  isDatePartNow,
+  isDatePartNoon,
+  isDatePartMidnight,
+  isDatePartNegativelyRelative,
+  isDatePartPositivelyRelative,
   getTomorrow,
   get30DaysFromToday,
   get120DaysFromToday,
@@ -257,4 +264,91 @@ function startOfDay (dateTime) {
     .atTime(LocalTime.MIN)
     .atOffset(ZoneOffset.UTC)
     .toString()
+}
+
+/**
+     * Determines if the provided {@code date} string is a relative date adjustment for "Today" (current date at
+     * start-of-day).
+     *
+     * @param date
+     *         the "Date" string being parsed
+     *
+     * @return {@code true} if relative date adjustment for "Today"; {@code false} otherwise
+     */
+function isDateRelativeToToday (date) {
+  return date.startsWith('T')
+}
+
+/**
+     * Determines if the provided {@code datePart} string is expected to be "Today" (current date at start-of-day).
+     *
+     * @param datePart
+     *         the "Date" string part being parsed
+     *
+     * @return {@code true} if expected to be "Today"; {@code false} otherwise
+     */
+function isDatePartToday (datePart) {
+  const lower = datePart.toLowerCase()
+  return lower === 't' || lower === 'today'
+}
+
+/**
+     * Determines if the provided {@code datePart} string is expected to be "Now" (current date at current time).
+     *
+     * @param datePart
+     *         the "Date" string part being parsed
+     *
+     * @return {@code true} if expected to be "Now"; {@code false} otherwise
+     */
+function isDatePartNow (datePart) {
+  const lowerCaseDatePart = datePart.toLowerCase()
+  return lowerCaseDatePart === 'n' || lowerCaseDatePart === 'now'
+}
+
+/**
+     * Determines if the provided {@code datePart} string is expected to be at "Noon".
+     *
+     * @param datePart
+     *         the "Date" string part being parsed
+     *
+     * @return {@code true} if expected to be at "Noon"; {@code false} otherwise
+     */
+function isDatePartNoon (datePart) {
+  return datePart.toLowerCase() === 'noon'
+}
+
+/**
+* Determines if the provided {@code datePart} string is expected to be at "Midnight".
+*
+* @param datePart
+*         the "Date" string part being parsed
+*
+* @return {@code true} if expected to be at "Midnight"; {@code false} otherwise
+*/
+function isDatePartMidnight (datePart) {
+  return datePart.toLowerCase() === 'mid'
+}
+
+/**
+* Determines if the provided {@code datePart} string is expected to be a "negatively" adjusted relative date.
+*
+* @param datePart
+*         the "Date" string part being parsed
+*
+* @return {@code true} if expected to be a "negatively" adjusted; {@code false} otherwise
+*/
+function isDatePartNegativelyRelative (datePart) {
+  return datePart.includes('-')
+}
+
+/**
+* Determines if the provided {@code datePart} string is expected to be a "positively" adjusted relative date.
+*
+* @param datePart
+*         the "Date" string part being parsed
+*
+* @return {@code true} if expected to be a "positively" adjusted; {@code false} otherwise
+*/
+function isDatePartPositivelyRelative (datePart) {
+  return datePart.includes('+')
 }
