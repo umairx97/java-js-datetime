@@ -1,5 +1,6 @@
-const { LocalDateTime, LocalDate, LocalTime, ZoneOffset } = require('@js-joda/core')
-const { DateTime } = require('luxon')
+const { LocalDateTime, LocalDate, LocalTime, ZoneOffset, ZoneId, OffsetDateTime, DateTimeFormatter } = require('@js-joda/core')
+require('@js-joda/timezone')
+const Luxon = require('luxon')
 const Constants = require('./constants')
 
 module.exports = {
@@ -14,6 +15,9 @@ module.exports = {
   isDatePartNow,
   isDatePartNoon,
   isDatePartMidnight,
+  formatWithPattern,
+  formatWithTimezoneAndPattern,
+  formatDate,
   isDatePartNegativelyRelative,
   isDatePartPositivelyRelative,
   getTomorrow,
@@ -51,14 +55,14 @@ function endOfDay (input) {
   // Convert input to Luxon DateTime object
   let dateTime
   if (input instanceof Date) {
-    dateTime = DateTime.fromJSDate(input)
+    dateTime = Luxon.DateTime.fromJSDate(input)
   }
 
   if (typeof input === 'string') {
-    dateTime = DateTime.fromISO(input)
+    dateTime = Luxon.DateTime.fromISO(input)
   }
 
-  if (input instanceof DateTime) {
+  if (input instanceof Luxon.DateTime) {
     dateTime = input // Input is already a Luxon DateTime object
   } else {
     return null // Input is of an unsupported type
@@ -351,4 +355,101 @@ function isDatePartNegativelyRelative (datePart) {
 */
 function isDatePartPositivelyRelative (datePart) {
   return datePart.includes('+')
+}
+/**
+     * Format the provided {@link OffsetDateTime} into a date string according to the provided {@code pattern},
+     * adjusting the time according to the provided TimeZone {@link String}. If the provided {@link OffsetDateTime} is
+     * {@code null}, {@code null} is returned.
+     * <p>
+     * If the {@link OffsetDateTime} has a TZ Offset that is the same as the provided {@code timeZone}, the output
+     * date/time value is not adjusted.
+     * <p>
+     * If the {@link OffsetDateTime} has a TZ Offset that is different from the provided {@code timeZone}, the output
+     * date/time is adjusted to local time at the TZ.
+     * <p>
+     * The "Time" of the {@link OffsetDateTime} is adjusted to match the same "Instant" at the {@code timeZone}. This
+     * means the "Date" of the resulting object can be different from the input.
+     * <pre>
+     * DateUtils.format(null,                      "America/New_York", "MM/dd/yyyy")      = null
+     * DateUtils.format(2018-10-21T06:12:45Z,      null,               "MM/dd/yyyy")      = IllegalArgumentException
+     * DateUtils.format(2018-10-21T06:12:45Z,      "America/New_York", null)              = IllegalArgumentException
+     *
+     * DateUtils.format(2018-10-21T06:12:45Z,      "America/New_York", "MM/dd/yyyy")      = "10/21/2018"
+     * DateUtils.format(2018-10-22T03:12:45Z,      "America/New_York", "MM/dd/yyyy")      = "10/21/2018"
+     * DateUtils.format(2018-10-21T06:12:45-04:00, "America/New_York", "MM/dd/yyyy")      = "10/21/2018"
+     * DateUtils.format(2018-10-22T03:12:45-04:00, "America/New_York", "MM/dd/yyyy")      = "10/22/2018"
+     *
+     * DateUtils.format(2018-10-21T06:12:45Z,      "America/New_York", "yyyyMMdd")        = "20181021"
+     * DateUtils.format(2018-10-22T03:12:45Z,      "America/New_York", "yyyyMMdd")        = "20181021"
+     * DateUtils.format(2018-10-21T06:12:45-04:00, "America/New_York", "yyyyMMdd")        = "20181021"
+     * DateUtils.format(2018-10-22T03:12:45-04:00, "America/New_York", "yyyyMMdd")        = "20181022"
+     *
+     * DateUtils.format(2018-10-21T06:12:45Z,      "America/New_York", "yyyyMMdd.HHmmss") = "20181021.021245"
+     * DateUtils.format(2018-10-22T03:12:45Z,      "America/New_York", "yyyyMMdd.HHmmss") = "20181021.231245"
+     * DateUtils.format(2018-10-21T00:00,          "America/New_York", "yyyyMMdd.HHmmss") = "20181021"
+     * DateUtils.format(2018-10-21T20:00,          "America/New_York", "yyyyMMdd.HHmmss") = "20181021.2"
+     * DateUtils.format(2018-10-21T06:12:45-04:00, "America/New_York", "yyyyMMdd.HHmmss") = "20181021.061245"
+     * DateUtils.format(2018-10-22T03:12:45-04:00, "America/New_York", "yyyyMMdd.HHmmss") = "20181022.031245"
+     * </pre>
+     *
+     * @param dateTime
+     *         the {@link OffsetDateTime} to format into a date string
+     * @param timeZone
+     *         the TimeZone {@link String} used in Date/Time conversions
+     * @param pattern
+     *         the date string formatting pattern to use
+     *
+     * @return a formatted date string or {@code null}
+     *
+     * @see OffsetDateTime
+     * @see #format(LocalDateTime, String)
+     */
+function formatWithTimezoneAndPattern (dateTime, timeZone, pattern) {
+  validateTimeZone(timeZone)
+
+  const zoneId = ZoneId.of(timeZone)
+  const ldt = OffsetDateTime.parse(dateTime).atZoneSameInstant(zoneId).toLocalDateTime()
+  return formatWithPattern(ldt, pattern)
+}
+
+function formatWithPattern (dateTime, pattern) {
+  if (dateTime === null) {
+    return null
+  }
+  if (pattern == null) {
+    throw new Error('Date Format Pattern must not be null')
+  }
+
+  const formatter = DateTimeFormatter.ofPattern(pattern)
+  const formattedString = LocalDateTime.parse(dateTime.toString()).format(formatter)
+  // Remove trailing zeros when formatting to a VistA Date/Time to avoid trailing precision errors.
+  if (Constants.VISTA_DATETIME_FORMAT === pattern) {
+    return removeTrailingZeros(formattedString)
+  }
+
+  return formattedString
+}
+
+/**
+     * Format the provided {@link LocalDate} into a date string using the "MM/dd/yyyy" date pattern. If the provided
+     * {@link LocalDate} is {@code null}, {@code null} is returned.
+     * <pre>
+     * DateUtils.formatDate(null)       = null
+     * DateUtils.formatDate(2018-10-21) = "10/21/2018"
+     * </pre>
+     *
+     * @param date
+     *         the {@link LocalDate} to format into a date string
+     *
+     * @return a date string in the "MM/dd/yyyy" date pattern or {@code null}
+     *
+     * @see LocalDate
+     * @see #DEFAULT_DATE_FORMAT
+     */
+function formatDate (date) {
+  if (date === null) return null
+
+  return formatWithPattern(
+    LocalDate.parse(date).atStartOfDay().toString(), Constants.DEFAULT_DATE_FORMAT
+  )
 }
