@@ -1,5 +1,14 @@
-const { LocalDateTime, LocalDate, LocalTime, ZoneOffset, ZoneId, OffsetDateTime, DateTimeFormatter } = require('@js-joda/core')
+const {
+  LocalDateTime,
+  LocalDate,
+  LocalTime,
+  ZoneOffset,
+  ZoneId,
+  OffsetDateTime,
+  DateTimeFormatter
+} = require('@js-joda/core')
 require('@js-joda/timezone')
+require('@js-joda/locale')
 const Luxon = require('luxon')
 const Constants = require('./constants')
 
@@ -124,7 +133,7 @@ function removeTrailingZeros (dateString) {
 }
 
 function createDateFormatsFromArray (dateFormats = []) {
-  return dateFormats.map(format => `[${format}]`).join('')
+  return dateFormats.map(format => `[${format}]`).join(' ')
 }
 
 /**

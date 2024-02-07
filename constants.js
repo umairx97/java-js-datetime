@@ -61,7 +61,7 @@ const VISTA_TIME_PATTERN = [
   'HH'
 ]
 
-const VISTA_DATE_TIME_SEPARATOR = '\\.'
+const VISTA_DATE_TIME_SEPARATOR = '.'
 
 /**
      * VistA Date/Time format pattern, ensuring the first token is an <b>8</b> digit string, followed by a ".", or a "."
