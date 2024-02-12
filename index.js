@@ -85,8 +85,6 @@ function endOfDay (input) {
 
   if (input instanceof Luxon.DateTime) {
     dateTime = input // Input is already a Luxon DateTime object
-  } else {
-    return null // Input is of an unsupported type
   }
 
   // Sets the time to the end of the day (23:59:59.999) in the local time zone
@@ -119,9 +117,7 @@ function endOfDay (input) {
      * @see #VISTA_DATE_TIME_FORMAT_PATTERN
      */
 function zeroPadVistaDateTime (dateString) {
-  if (!dateString) {
-    return null
-  }
+  if (isNullish(dateString)) return null
 
   if (VISTA_DATE_TIME_FORMAT_PATTERN.test(dateString)) {
     const tokens = dateString.split(VISTA_DATE_TIME_SEPARATOR)
@@ -374,7 +370,7 @@ function get3MonthsFromToday () {
 function startOfDay (dateTime) {
   if (dateTime === null) return null
 
-  return LocalDateTime
+  return OffsetDateTime
     .parse(dateTime)
     .toLocalDate()
     .atTime(LocalTime.MIN)
@@ -429,7 +425,7 @@ function isDatePartNow (datePart) {
      *
      * @return {@code true} if expected to be at "Noon"; {@code false} otherwise
      */
-function isDatePartNoon (datePart) {
+function isDatePartNoon (datePart = '') {
   return datePart.toLowerCase() === 'noon'
 }
 
@@ -521,20 +517,28 @@ function formatWithTimezoneAndPattern (dateTime, timeZone, pattern) {
 
   const zoneId = ZoneId.of(timeZone)
   const ldt = OffsetDateTime.parse(dateTime).atZoneSameInstant(zoneId).toLocalDateTime()
-  return formatWithPattern(ldt, pattern)
+  return formatWithPattern(ldt.toString(), pattern)
 }
 
 function formatWithPattern (dateTime, pattern) {
   if (dateTime === null) {
     return null
   }
-  if (pattern == null) {
+  if (pattern === null) {
     throw new Error('Date Format Pattern must not be null')
   }
-
   const formatter = DateTimeFormatter.ofPattern(pattern)
-  const formattedString = LocalDateTime.parse(dateTime.toString()).format(formatter)
-  // Remove trailing zeros when formatting to a VistA Date/Time to avoid trailing precision errors.
+  let formattedString = null
+
+  const isJodaInstance = dateTime instanceof LocalDateTime || dateTime instanceof LocalDate || dateTime instanceof LocalTime || dateTime instanceof OffsetDateTime
+
+  if (isJodaInstance) {
+    formattedString = dateTime.format(formatter)
+  } else {
+    formattedString = LocalDateTime.parse(dateTime).format(formatter)
+  }
+
+  // // Remove trailing zeros when formatting to a VistA Date/Time to avoid trailing precision errors.
   if (VISTA_DATETIME_FORMAT === pattern) {
     return removeTrailingZeros(formattedString)
   }

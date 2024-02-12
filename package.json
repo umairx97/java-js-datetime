@@ -18,6 +18,7 @@
     "@js-joda/timezone": "^2.18.2",
     "cldr-data": "^36.0.1",
     "cldrjs": "^0.5.5",
-    "luxon": "^3.4.4"
+    "luxon": "^3.4.4",
+    "tape": "^5.7.4"
   }
 }
