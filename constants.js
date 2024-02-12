@@ -78,7 +78,7 @@ const FILEMAN_DATE_FORMAT_PATTERN = /^\\d{7}$|^\\d{7}\\.$|^\\d{7}\\.\\d*$/
 /**
      * VistA & FileMan Date/Time format pattern, ensuring the string is a set of digits separated with a ".".
      */
-const VISTA_DATE_TIME_FORMAT_PATTERN = /\\d+\\.\\d+/
+const VISTA_DATE_TIME_FORMAT_PATTERN = /\d+\.\d+/
 
 /**
      * Format {@link String} for building VistA & FileMan Date/Time strings.

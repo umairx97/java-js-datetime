@@ -10,13 +10,23 @@ const {
 require('@js-joda/timezone')
 require('@js-joda/locale')
 const Luxon = require('luxon')
-const Constants = require('./constants')
+const {
+  DEFAULT_DATE_FORMAT,
+  VISTA_DATETIME_FORMAT,
+  VISTA_DATE_FORMAT,
+  FILEMAN_DATE_OFFSET,
+  FILEMAN_DATE_FORMAT_PATTERN,
+  VISTA_DATE_TIME_FORMAT_PATTERN,
+  VISTA_DATE_TIME_SEPARATOR
+} = require('./constants')
 
 module.exports = {
   createDateFormatsFromArray,
   removeTrailingZeros,
   endOfDay,
   getNow,
+  zeroPadVistaDateTime,
+  convertDateFromFileManToVista,
   getToday,
   getYesterday,
   isDateRelativeToToday,
@@ -26,7 +36,9 @@ module.exports = {
   isDatePartMidnight,
   formatWithPattern,
   formatWithTimezoneAndPattern,
-  formatDate,
+  formatLocalDate,
+  formatVistaDate,
+  formatLocalDateTime,
   isDatePartNegativelyRelative,
   isDatePartPositivelyRelative,
   getTomorrow,
@@ -82,6 +94,97 @@ function endOfDay (input) {
 }
 
 /**
+     * Zero-Pad a VistA Date/Time {@link String}. If the date is determined to be "null" according to
+     * {@link #isNullish(String)}, {@code null} is returned. If the date does not match the pattern
+     * {@code "[\d]+\.[\d]+"}, the value is returned as is. If the date ends with a {@code "."}, the {@code "."} is
+     * stripped from the end before returning.
+     * <pre>
+     * DateUtils.zeroPadVistaDateTime(null)                   = null
+     * DateUtils.zeroPadVistaDateTime("")                     = null
+     * DateUtils.zeroPadVistaDateTime("Invalid Date")         = null
+     *
+     * DateUtils.zeroPadVistaDateTime("20181021")             = "20181021"
+     * DateUtils.zeroPadVistaDateTime("20181021.")            = "20181021"
+     * DateUtils.zeroPadVistaDateTime("20181021.06")          = "20181021.060000"
+     * DateUtils.zeroPadVistaDateTime("20181021.060000")      = "20181021.060000"
+     * DateUtils.zeroPadVistaDateTime("10/21/2018")           = "10/21/2018"
+     * </pre>
+     *
+     * @param dateString
+     *         the VistA Date/Time {@link String} to zero-pad
+     *
+     * @return the zero-padded Date/Time {@link String} or {@code null}
+     *
+     * @see #isNullish(String)
+     * @see #VISTA_DATE_TIME_FORMAT_PATTERN
+     */
+function zeroPadVistaDateTime (dateString) {
+  if (!dateString) {
+    return null
+  }
+
+  if (VISTA_DATE_TIME_FORMAT_PATTERN.test(dateString)) {
+    const tokens = dateString.split(VISTA_DATE_TIME_SEPARATOR)
+    // Ensure date is filled
+    const dateToken = tokens[0].padEnd(6, '0') // Right pad string until 6 characters long
+    // Ensure second precision; Remove any sub-second precision
+    const timeToken = tokens[1].padEnd(6, '0').substring(0, 6) // Right pad string until 6 characters long, then take first 6 characters
+    return `${dateToken}.${timeToken}` // Using template literals for string formatting
+  }
+  if (dateString.endsWith('.')) {
+    return dateString.slice(0, -1) // Remove the last character if it is a dot
+  }
+  return dateString
+}
+
+/**
+     * Convert the "FileMan" Date/Time {@link String} ("yyyMMdd.HHmmss") to a VistA Date/Time format {@link String}
+     * ("yyyyMMdd.HHmmss"). The Date value is adjusted with the {@link #FILEMAN_DATE_OFFSET} to the appropriate value.
+     * <p>
+     * If the provided date string does not match the {@link #FILEMAN_DATE_FORMAT_PATTERN}, the value is returned as
+     * is.
+     * <p>
+     * FileMan Formatting: <a href="http://www.vistapedia.com/index.php/Date_formats">VistA Date Formats</a>
+     * <pre>
+     * DateUtils.convertDateFromFileManToVista(null)                   = null
+     * DateUtils.convertDateFromFileManToVista("")                     = null
+     * DateUtils.convertDateFromFileManToVista("Invalid Date")         = null
+     *
+     * DateUtils.convertDateFromFileManToVista("3181021")              = "20181021"
+     * DateUtils.convertDateFromFileManToVista("3181021.061245")       = "20181021.061245"
+     *
+     * DateUtils.convertDateFromFileManToVista("20181021")             = "20181021"
+     * DateUtils.convertDateFromFileManToVista("20181021.061245")      = "20181021.061245"
+     * DateUtils.convertDateFromFileManToVista("10/21/2018")           = "10/21/2018"
+     * </pre>
+     *
+     * @param dateString
+     *         the "FileMan" Date/Time {@link String} to convert to a VistA Date/Time format
+     *
+     * @return a VistA Date/Time formatted {@link String}, the original Date/Time {@link String}, or {@code null}
+     *
+     * @see #isNullish(String)
+     * @see #FILEMAN_DATE_FORMAT_PATTERN
+     * @see #FILEMAN_DATE_OFFSET
+     */
+function convertDateFromFileManToVista (dateString) {
+  if (isNullish(dateString)) return null
+
+  if (FILEMAN_DATE_FORMAT_PATTERN.test(dateString)) {
+    const tokens = dateString.split(VISTA_DATE_TIME_SEPARATOR)
+    const dateToken = parseInt(tokens[0], 10) + FILEMAN_DATE_OFFSET
+
+    if (tokens.length > 1) {
+      // Adjust accordingly if it involves more complex formatting
+      return `${dateToken}${VISTA_DATE_TIME_SEPARATOR}${tokens[1]}`
+    } else {
+      return dateToken.toString()
+    }
+  }
+  return dateString
+}
+
+/**
      * Remove trailing zeros from a VistA Date/Time {@link String}. If the date is determined to be "null" according to
      * {@link #isNullish(String)}, {@code null} is returned. If the date does not match the pattern
      * {@code "[\d]+\.[\d]+"}, the value is returned as is. If the date ends with a {@code "."}, the {@code "."} is
@@ -117,7 +220,7 @@ function removeTrailingZeros (dateString) {
 
   // Adjust the regex pattern to match JavaScript syntax. Example: VISTA_DATE_TIME_FORMAT_PATTERN
   // Note: You need to define the actual regex pattern for VISTA_DATE_TIME_FORMAT_PATTERN based on your requirements
-  if (Constants.VISTA_DATE_TIME_FORMAT_PATTERN.test(dateString)) {
+  if (VISTA_DATE_TIME_FORMAT_PATTERN.test(dateString)) {
     let trimmedString = dateString
     while (trimmedString.includes('.') && (trimmedString.endsWith('0') || trimmedString.endsWith('.'))) {
       trimmedString = trimmedString.slice(0, -1) // Equivalent to chop in Java
@@ -432,7 +535,7 @@ function formatWithPattern (dateTime, pattern) {
   const formatter = DateTimeFormatter.ofPattern(pattern)
   const formattedString = LocalDateTime.parse(dateTime.toString()).format(formatter)
   // Remove trailing zeros when formatting to a VistA Date/Time to avoid trailing precision errors.
-  if (Constants.VISTA_DATETIME_FORMAT === pattern) {
+  if (VISTA_DATETIME_FORMAT === pattern) {
     return removeTrailingZeros(formattedString)
   }
 
@@ -455,10 +558,52 @@ function formatWithPattern (dateTime, pattern) {
      * @see LocalDate
      * @see #DEFAULT_DATE_FORMAT
      */
-function formatDate (date) {
+function formatLocalDate (date) {
   if (date === null) return null
 
   return formatWithPattern(
-    LocalDate.parse(date).atStartOfDay().toString(), Constants.DEFAULT_DATE_FORMAT
+    LocalDate.parse(date).atStartOfDay().toString(), DEFAULT_DATE_FORMAT
   )
+}
+
+/**
+     * Format the provided {@link LocalDateTime} into a date string using the "MM/dd/yyyy" date pattern. If the provided
+     * {@link LocalDateTime} is {@code null}, {@code null} is returned.
+     * <pre>
+     * DateUtils.formatDate(null)                = null
+     * DateUtils.formatDate(2018-10-21T06:12:45) = "10/21/2018"
+     * </pre>
+     *
+     * @param dateTime
+     *         the {@link LocalDateTime} to format into a date string
+     *
+     * @return a date string in the "MM/dd/yyyy" date pattern or {@code null}
+     *
+     * @see LocalDateTime
+     * @see #DEFAULT_DATE_FORMAT
+     */
+function formatLocalDateTime (dateTime) {
+  return formatWithPattern(dateTime, DEFAULT_DATE_FORMAT)
+}
+
+/**
+     * Format the provided {@link LocalDate} into a date string using the "yyyyMMdd" date pattern. If the provided
+     * {@link LocalDate} is {@code null}, {@code null} is returned.
+     * <pre>
+     * DateUtils.formatVistaDate(null)       = null
+     * DateUtils.formatVistaDate(2018-10-21) = "20181021"
+     * </pre>
+     *
+     * @param date
+     *         the {@link LocalDate} to format into a date string
+     *
+     * @return a date string in the "yyyyMMdd" date pattern or {@code null}
+     *
+     * @see LocalDate
+     * @see #VISTA_DATE_FORMAT
+     */
+function formatVistaDate (date) {
+  if (date === null) return null
+
+  return formatWithPattern(LocalDate.parse(date).atStartOfDay(), VISTA_DATE_FORMAT)
 }
