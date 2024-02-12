@@ -607,7 +607,6 @@ function formatLocalDateTime (dateTime) {
      * @see #VISTA_DATE_FORMAT
      */
 function formatVistaDate (date) {
-  console.log('first')
   if (date === null) return null
 
   return formatWithPattern(LocalDate.parse(date).atStartOfDay(), VISTA_DATE_FORMAT)
