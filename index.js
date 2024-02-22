@@ -30,6 +30,7 @@ module.exports = {
   convertDateFromVistaToFileMan,
   getNow,
   zeroPadVistaDateTime,
+  formatFileManDateTime,
   convertDateFromFileManToVista,
   getToday,
   getYesterday,
@@ -124,6 +125,37 @@ function formatVistaDateTime (dateTime) {
   const dTime = isJodaInstance ? dateTime : LocalDateTime.parse(dateTime)
   return formatWithPattern(dTime, VISTA_DATETIME_FORMAT)
 }
+
+/**
+     * Format the provided {@link LocalDateTime} into a date string using the FileMan "yyyMMdd.HHmmss" date pattern. If
+     * the provided {@link LocalDateTime} is {@code null}, {@code null} is returned.
+     * <p>
+     * FileMan Formatting: <a href="http://www.vistapedia.com/index.php/Date_formats">VistA Date Formats</a>
+     * <pre>
+     * DateUtils.formatFileManDateTime(null)                = null
+     * DateUtils.formatFileManDateTime(2018-10-21T06:12:45) = "20181021.061245"
+     * DateUtils.formatFileManDateTime(2018-10-21T00:00)    = "20181021"
+     * DateUtils.formatFileManDateTime(2018-10-21T20:00)    = "20181021.2"
+     * </pre>
+     *
+     * @param dateTime
+     *         the {@link LocalDateTime} to format into a date string
+     *
+     * @return a date string in the FileMan "yyyMMdd.HHmmss" date pattern or {@code null}
+     *
+     * @see LocalDateTime
+     * @see #VISTA_DATETIME_FORMAT
+     * @see #formatVistaDateTime(LocalDateTime)
+     * @see #convertDateFromVistaToFileMan(String)
+     */
+function formatFileManDateTime (dateTime) {
+  const dTime = dateTime instanceof LocalDateTime ? dateTime : LocalDateTime.parse(dateTime)
+  const vistaDate = formatVistaDateTime(dTime)
+  return convertDateFromVistaToFileMan(vistaDate)
+}
+
+console.log(formatFileManDateTime(LocalDate.of(2018, 10, 21)
+  .atTime(6, 12, 45)))
 
 /**
      * Format the provided {@link OffsetDateTime} into a date string using the "yyyyMMdd.HHmmss" date pattern, adjusting

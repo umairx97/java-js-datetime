@@ -10,7 +10,8 @@ const {
   formatLocalDate,
   formatWithTimezoneAndPattern,
   formatVistaDateTime,
-  formatVistaDateTimeWithTimezone
+  formatVistaDateTimeWithTimezone,
+  formatFileManDateTime
 } = require('./')
 
 const test = require('tape')
@@ -118,5 +119,14 @@ test('formatVistaDateTimeWithTimezone', t => {
     .toOffsetDateTime()
 
   t.equal(formatVistaDateTimeWithTimezone(dTime, 'America/New_York'), '20181021.061245')
+  t.end()
+})
+
+test('formatFileManDateTime', t => {
+  const dTime = LocalDate.of(2018, 10, 21)
+    .atTime(6, 12, 45)
+  const data = formatFileManDateTime(dTime)
+
+  t.equal(data, '3181021.061245')
   t.end()
 })
