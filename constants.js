@@ -67,7 +67,8 @@ const VISTA_DATE_TIME_SEPARATOR = '.'
      * VistA Date/Time format pattern, ensuring the first token is an <b>8</b> digit string, followed by a ".", or a "."
      * with additional time digits.
      */
-const VISTA_DATE_FORMAT_PATTERN = /^\\d{8}$|^\\d{8}\\.$|^\\d{8}\\.\\d*$'/
+// const VISTA_DATE_FORMAT_PATTERN = /^\\d{8}$|^\\d{8}\\.$|^\\d{8}\\.\\d*$/
+const VISTA_DATE_FORMAT_PATTERN = new RegExp('^\\d{8}$|^\\d{8}\\.$|^\\d{8}\\.\\d*$')
 
 /**
      * FileMan Date/Time format pattern, ensuring the first token is an <b>7</b> digit string, followed by a ".", or a

@@ -4,6 +4,7 @@ const {
   convertDateFromFileManToVista,
   removeTrailingZeros,
   startOfDay,
+  convertDateFromVistaToFileMan,
   formatVistaDate,
   formatLocalDate,
   formatWithTimezoneAndPattern
@@ -87,5 +88,14 @@ test('formatLocalDate', t => {
 test('formatVistaDate', t => {
   t.equal(formatVistaDate(null), null)
   t.equal(formatVistaDate('2018-10-21'), '20181021', 'should not fail')
+  t.end()
+})
+test('convertDateFromVistaToFileMan', t => {
+  t.equal(convertDateFromVistaToFileMan(null), null)
+  t.equal(convertDateFromVistaToFileMan(''), null)
+  t.equal(convertDateFromVistaToFileMan('Invalid Date'), null)
+  t.equal(convertDateFromFileManToVista('20181021'), '20181021')
+  t.equal(convertDateFromVistaToFileMan('20181021.061245'), '3181021.061245')
+  t.equal(convertDateFromVistaToFileMan('10/21/2018'), '10/21/2018')
   t.end()
 })

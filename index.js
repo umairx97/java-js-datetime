@@ -14,6 +14,7 @@ const {
   DEFAULT_DATE_FORMAT,
   VISTA_DATETIME_FORMAT,
   VISTA_DATE_FORMAT,
+  VISTA_DATE_FORMAT_PATTERN,
   FILEMAN_DATE_OFFSET,
   FILEMAN_DATE_FORMAT_PATTERN,
   VISTA_DATE_TIME_FORMAT_PATTERN,
@@ -24,6 +25,7 @@ module.exports = {
   createDateFormatsFromArray,
   removeTrailingZeros,
   endOfDay,
+  convertDateFromVistaToFileMan,
   getNow,
   zeroPadVistaDateTime,
   convertDateFromFileManToVista,
@@ -49,6 +51,52 @@ module.exports = {
   isBlank,
   isNullish,
   validateTimeZone
+}
+
+/**
+     * Convert the VistA Date/Time {@link String} ("yyyyMMdd.HHmmss") to a "FileMan" Date/Time format {@link String}
+     * ("yyyMMdd.HHmmss"). The Date value is adjusted with the {@link #FILEMAN_DATE_OFFSET} to the appropriate value.
+     * <p>
+     * If the provided date string does not match the {@link #VISTA_DATE_FORMAT_PATTERN}, the value is returned as is.
+     * <p>
+     * FileMan Formatting: <a href="http://www.vistapedia.com/index.php/Date_formats">VistA Date Formats</a>
+     * <pre>
+     * DateUtils.convertDateFromVistaToFileMan(null)                   = null
+     * DateUtils.convertDateFromVistaToFileMan("")                     = null
+     * DateUtils.convertDateFromVistaToFileMan("Invalid Date")         = null
+     *
+     * DateUtils.convertDateFromVistaToFileMan("20181021")             = "3181021"
+     * DateUtils.convertDateFromVistaToFileMan("20181021.061245")      = "3181021.061245"
+     * DateUtils.convertDateFromVistaToFileMan("10/21/2018")           = "10/21/2018"
+     * </pre>
+     *
+     * @param dateString
+     *         the VistA Date/Time {@link String} to convert to a "FileMan" Date/Time format
+     *
+     * @return a "FileMan" Date/Time formatted {@link String}, the original Date/Time {@link String}, or {@code null}
+     *
+     * @see #isNullish(String)
+     * @see #VISTA_DATE_FORMAT_PATTERN
+     * @see #FILEMAN_DATE_OFFSET
+     */
+
+function convertDateFromVistaToFileMan (dateString) {
+  if (isNullish(dateString)) return null
+
+  const VISTA_DATE_TIME_SEPARATOR = '\\.'
+
+  if (VISTA_DATE_FORMAT_PATTERN.test(dateString)) {
+    const tokens = dateString.split(new RegExp(VISTA_DATE_TIME_SEPARATOR))
+
+    const dateToken = parseInt(tokens[0], 10) - FILEMAN_DATE_OFFSET
+
+    if (tokens.length > 1) {
+      return `${dateToken}.${tokens[1]}`
+    } else {
+      return dateToken.toString()
+    }
+  }
+  return dateString
 }
 
 /**
