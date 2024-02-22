@@ -1,3 +1,4 @@
+const { LocalDate } = require('@js-joda/core')
 const {
   isDatePartNoon,
   endOfDay, zeroPadVistaDateTime,
@@ -7,7 +8,8 @@ const {
   convertDateFromVistaToFileMan,
   formatVistaDate,
   formatLocalDate,
-  formatWithTimezoneAndPattern
+  formatWithTimezoneAndPattern,
+  formatVistaDateTime
 } = require('./')
 
 const test = require('tape')
@@ -97,5 +99,11 @@ test('convertDateFromVistaToFileMan', t => {
   t.equal(convertDateFromFileManToVista('20181021'), '20181021')
   t.equal(convertDateFromVistaToFileMan('20181021.061245'), '3181021.061245')
   t.equal(convertDateFromVistaToFileMan('10/21/2018'), '10/21/2018')
+  t.end()
+})
+
+test('formatVistaDateTime', t => {
+  const dateTime = LocalDate.of(2018, 10, 21).atTime(6, 12, 45)
+  t.equal(formatVistaDateTime(dateTime), '20181021.061245')
   t.end()
 })

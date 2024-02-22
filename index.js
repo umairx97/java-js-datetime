@@ -24,6 +24,7 @@ const {
 module.exports = {
   createDateFormatsFromArray,
   removeTrailingZeros,
+  formatVistaDateTime,
   endOfDay,
   convertDateFromVistaToFileMan,
   getNow,
@@ -99,6 +100,32 @@ function convertDateFromVistaToFileMan (dateString) {
   return dateString
 }
 
+/**
+     * Format the provided {@link LocalDateTime} into a date string using the "yyyyMMdd.HHmmss" date pattern. If the
+     * provided {@link LocalDateTime} is {@code null}, {@code null} is returned.
+     * <pre>
+     * DateUtils.formatVistaDateTime(null)                = null
+     * DateUtils.formatVistaDateTime(2018-10-21T06:12:45) = "20181021.061245"
+     * DateUtils.formatVistaDateTime(2018-10-21T00:00)    = "20181021"
+     * DateUtils.formatVistaDateTime(2018-10-21T20:00)    = "20181021.2"
+     * </pre>
+     *
+     * @param dateTime
+     *         the {@link LocalDateTime} to format into a date string
+     *
+     * @return a date string in the "yyyyMMdd.HHmmss" date pattern or {@code null}
+     *
+     * @see LocalDateTime
+     * @see #VISTA_DATETIME_FORMAT
+     */
+function formatVistaDateTime (dateTime) {
+  const isJodaInstance = dateTime instanceof LocalDateTime
+  const dTime = isJodaInstance ? dateTime : LocalDateTime.parse(dateTime)
+  return formatWithPattern(dTime, VISTA_DATETIME_FORMAT)
+}
+
+console.log(formatVistaDateTime(LocalDate.of(2018, 10, 21)
+  .atTime(6, 12, 45)))
 /**
      * Return the "End-Of-Day" value for the provided {@link OffsetDateTime} input at UTC. Any existing TZ Offset value
      * is ignored and is treated as UTC. If the provided {@link OffsetDateTime} is {@code null}, {@code null} is
