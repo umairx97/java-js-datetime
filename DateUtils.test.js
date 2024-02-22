@@ -11,7 +11,18 @@ const {
   formatWithTimezoneAndPattern,
   formatVistaDateTime,
   formatVistaDateTimeWithTimezone,
-  formatFileManDateTime
+  formatFileManDateTime,
+  formatFileManDate,
+  parseToLocal,
+  parseToOffset,
+  parseToUtc,
+  parseFromUtc,
+  parseRelativeDatePart,
+  parseRelativeVistaDate,
+  parseDatePart,
+  parseTimePart,
+  parseTime,
+  formatDate,
 } = require('./')
 
 const test = require('tape')
@@ -129,4 +140,71 @@ test('formatFileManDateTime', t => {
 
   t.equal(data, '3181021.061245')
   t.end()
+})
+
+test('formatFileManDate', (t) => {
+  const dateTime = LocalDate.of(2018, 10, 21)
+
+  const timeZone = 'UTC';
+
+  const data = formatFileManDate(dateTime, timeZone);
+
+  t.equal(data, '3181021');
+  t.end();
+});
+
+
+test('parseRelativeVistaDate', (t) => {
+
+  const data = parseRelativeVistaDate("T").toLocaleDateString();
+
+  t.equal(data, new Date().toLocaleDateString());
+  t.end();
+})
+
+test('parseToLocal',(t) => {
+  const string = "10/21/2018 02:12"
+
+  const expectedDate = '2018-10-21T02:12';
+
+  const dateTime = parseToLocal(string).toString();
+
+  t.equal(dateTime, expectedDate);
+  t.end();
+});
+
+test('parseToOffset',(t) => {
+  const dateString = "10/21/2018 02:12"
+
+  const dateTime = parseToOffset(dateString).toString();
+
+  const expectedDate = '2018-10-21T02:12Z';
+  t.equal(dateTime, expectedDate);
+  t.end();
+});
+
+test('parseToUtc',(t) => {
+  const string = '20181021.021245'
+  const timeZone =   "UTC"
+  const dateTime = parseToUtc(string, timeZone).toString();
+
+  t.equal(dateTime, '2018-10-21T02:12:45Z');
+  t.end();
+});
+
+test('parseFromUtc',(t) => {
+  const string = '20181021.021245'
+  const timeZone =   "UTC"
+  const dateTime = parseFromUtc(string, timeZone).toString();
+
+  t.equal(dateTime, '2018-10-21T02:12:45Z');
+  t.end();
+});
+
+test('parseDatePart', (t) => {
+  const string = 'T'
+  const dateTime = parseDatePart(string).toString();
+
+  t.equal(dateTime, '2018-10-21T00:00');
+  t.end();
 })

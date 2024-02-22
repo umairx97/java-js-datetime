@@ -1,3 +1,5 @@
+const { DateTimeFormatter } = require("@js-joda/core")
+
 const DEFAULT_DATE_FORMAT = 'MM/dd/yyyy'
 const VISTA_DATETIME_FORMAT = 'yyyyMMdd.HHmmss'
 const VISTA_DATE_FORMAT = 'yyyyMMdd'
@@ -86,6 +88,8 @@ const VISTA_DATE_TIME_FORMAT_PATTERN = /\d+\.\d+/
      */
 const VISTA_DATE_TIME_FORMAT_STRING = '%s.%s'
 
+const DATE_FORMAT = DateTimeFormatter.ofPattern(VISTA_DATE_FORMAT_PATTERN);
+
 module.exports = {
   DEFAULT_DATE_FORMAT,
   VISTA_DATETIME_FORMAT,
@@ -97,5 +101,6 @@ module.exports = {
   FILEMAN_DATE_FORMAT_PATTERN,
   VISTA_DATE_TIME_FORMAT_PATTERN,
   VISTA_DATE_TIME_FORMAT_STRING,
-  VISTA_DATE_TIME_SEPARATOR
+  VISTA_DATE_TIME_SEPARATOR,
+  DATE_FORMAT
 }
