@@ -154,9 +154,6 @@ function formatFileManDateTime (dateTime) {
   return convertDateFromVistaToFileMan(vistaDate)
 }
 
-console.log(formatFileManDateTime(LocalDate.of(2018, 10, 21)
-  .atTime(6, 12, 45)))
-
 /**
      * Format the provided {@link OffsetDateTime} into a date string using the "yyyyMMdd.HHmmss" date pattern, adjusting
      * the time according to the provided TimeZone {@link String}. If the provided {@link OffsetDateTime} is
