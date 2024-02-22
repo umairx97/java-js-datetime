@@ -1,4 +1,4 @@
-const { LocalDate } = require('@js-joda/core')
+const { LocalDate, ZoneId } = require('@js-joda/core')
 const {
   isDatePartNoon,
   endOfDay, zeroPadVistaDateTime,
@@ -9,10 +9,13 @@ const {
   formatVistaDate,
   formatLocalDate,
   formatWithTimezoneAndPattern,
-  formatVistaDateTime
+  formatVistaDateTime,
+  formatVistaDateTimeWithTimezone
 } = require('./')
 
 const test = require('tape')
+require('@js-joda/timezone')
+require('@js-joda/locale')
 
 test('isDatePartNoon', t => {
   t.true(isDatePartNoon('noon'), '12:00:00 is noon')
@@ -105,5 +108,15 @@ test('convertDateFromVistaToFileMan', t => {
 test('formatVistaDateTime', t => {
   const dateTime = LocalDate.of(2018, 10, 21).atTime(6, 12, 45)
   t.equal(formatVistaDateTime(dateTime), '20181021.061245')
+  t.end()
+})
+
+test('formatVistaDateTimeWithTimezone', t => {
+  const dTime = LocalDate.of(2018, 10, 21)
+    .atTime(6, 12, 45)
+    .atZone(ZoneId.of('America/New_York'))
+    .toOffsetDateTime()
+
+  t.equal(formatVistaDateTimeWithTimezone(dTime, 'America/New_York'), '20181021.061245')
   t.end()
 })

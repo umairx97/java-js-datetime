@@ -24,6 +24,7 @@ const {
 module.exports = {
   createDateFormatsFromArray,
   removeTrailingZeros,
+  formatVistaDateTimeWithTimezone,
   formatVistaDateTime,
   endOfDay,
   convertDateFromVistaToFileMan,
@@ -124,8 +125,49 @@ function formatVistaDateTime (dateTime) {
   return formatWithPattern(dTime, VISTA_DATETIME_FORMAT)
 }
 
-console.log(formatVistaDateTime(LocalDate.of(2018, 10, 21)
-  .atTime(6, 12, 45)))
+/**
+     * Format the provided {@link OffsetDateTime} into a date string using the "yyyyMMdd.HHmmss" date pattern, adjusting
+     * the time according to the provided TimeZone {@link String}. If the provided {@link OffsetDateTime} is
+     * {@code null}, {@code null} is returned.
+     * <p>
+     * If the {@link OffsetDateTime} has a TZ Offset that is the same as the provided {@code timeZone}, the output
+     * date/time value is not adjusted.
+     * <p>
+     * If the {@link OffsetDateTime} has a TZ Offset that is different from the provided {@code timeZone}, the output
+     * date/time is adjusted to local time at the TZ.
+     * <p>
+     * The "Time" of the {@link OffsetDateTime} is adjusted to match the same "Instant" at the {@code timeZone}. This
+     * means the "Date" of the resulting object can be different from the input.
+     * <pre>
+     * DateUtils.formatVistaDateTime(null,                      "America/New_York") = null
+     * DateUtils.formatVistaDateTime(2018-10-21T06:12:45Z,      null)               = IllegalArgumentException
+     *
+     * DateUtils.formatVistaDateTime(2018-10-21T06:12:45Z,      "America/New_York") = "20181021.021245"
+     * DateUtils.formatVistaDateTime(2018-10-22T03:12:45Z,      "America/New_York") = "20181021.231245"
+     *
+     * DateUtils.formatVistaDateTime(2018-10-21T00:00-04:00,    "America/New_York") = "20181021"
+     * DateUtils.formatVistaDateTime(2018-10-21T20:00-04:00,    "America/New_York") = "20181021.2"
+     *
+     * DateUtils.formatVistaDateTime(2018-10-21T06:12:45-04:00, "America/New_York") = "20181021.061245"
+     * DateUtils.formatVistaDateTime(2018-10-22T03:12:45-04:00, "America/New_York") = "20181022.031245"
+     * </pre>
+     *
+     * @param dateTime
+     *         the {@link OffsetDateTime} to format into a date string
+     * @param timeZone
+     *         the TimeZone {@link String} used in Date/Time conversions
+     *
+     * @return a date string in the "yyyyMMdd.HHmmss" date pattern or {@code null}
+     *
+     * @see OffsetDateTime
+     * @see #VISTA_DATETIME_FORMAT
+     * @see #formatVistaDateTime(LocalDateTime)
+     */
+function formatVistaDateTimeWithTimezone (dateTime, timeZone) {
+  const isJodaTime = dateTime instanceof OffsetDateTime
+  const dTime = isJodaTime ? dateTime : OffsetDateTime.parse(dateTime)
+  return formatWithTimezoneAndPattern(dTime, timeZone, VISTA_DATETIME_FORMAT)
+}
 /**
      * Return the "End-Of-Day" value for the provided {@link OffsetDateTime} input at UTC. Any existing TZ Offset value
      * is ignored and is treated as UTC. If the provided {@link OffsetDateTime} is {@code null}, {@code null} is
@@ -590,8 +632,9 @@ function isDatePartPositivelyRelative (datePart) {
 function formatWithTimezoneAndPattern (dateTime, timeZone, pattern) {
   validateTimeZone(timeZone)
 
+  const dTime = dateTime instanceof OffsetDateTime ? dateTime : OffsetDateTime.parse(dateTime)
   const zoneId = ZoneId.of(timeZone)
-  const ldt = OffsetDateTime.parse(dateTime).atZoneSameInstant(zoneId).toLocalDateTime()
+  const ldt = dTime.atZoneSameInstant(zoneId).toLocalDateTime()
   return formatWithPattern(ldt.toString(), pattern)
 }
 
