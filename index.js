@@ -710,7 +710,7 @@ function parseToOffset(dateString) {
   if (localDateTime === null) {
     return null;
   }
-  return localDateTime.atOffset(ZoneOffset.UTC);
+  return localDateTime.atOffset(ZoneOffset.UTC)?.toString();
 }
 
 
@@ -772,7 +772,7 @@ function parseToUtc(dateString, timeZone) {
   const zoneId = ZoneId.of(timeZone);
   const offsetDateTime = localDateTime.atZone(zoneId).toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
 
-  return offsetDateTime;
+  return offsetDateTime?.toString();
 }
 
 /**
@@ -836,7 +836,7 @@ function parseFromUtc(dateString, timeZone) {
     .atZoneSameInstant(zoneId)
     .toOffsetDateTime();
 
-  return offsetDateTime;
+  return offsetDateTime?.toString();
 }
 
 
@@ -1036,7 +1036,7 @@ function parseDatePart(datePart) {
     localDateTime = null;
   }
 
-  return localDateTime;
+  return localDateTime?.toString();
 }
 
 /**
@@ -1219,7 +1219,7 @@ function parseRelativeVistaDate(dateString) {
     localDateTime = parseTimePart(localDateTime, datePart, timePart);
   }
   console.log("DATE STRING", dateTimeParts, datePart, localDateTime)
-  return localDateTime;
+  return localDateTime?.toString();
 }
 /**
      * Format the provided {@link OffsetDateTime} into a date string according to the provided {@code pattern},

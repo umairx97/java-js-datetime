@@ -153,7 +153,7 @@ test('formatFileManDate', (t) => {
 
 test('parseRelativeVistaDate', (t) => {
 
-  const data = parseRelativeVistaDate("T").toString();
+  const data = parseRelativeVistaDate("T");
   const expeected = '2024-02-23T00:00'
   t.equal(data, expeected);
   t.end();
@@ -173,7 +173,7 @@ test('parseToLocal',(t) => {
 test('parseToOffset',(t) => {
   const dateString = "10/21/2018 02:12"
 
-  const dateTime = parseToOffset(dateString).toString();
+  const dateTime = parseToOffset(dateString);
 
   const expectedDate = '2018-10-21T02:12Z';
   t.equal(dateTime, expectedDate);
@@ -183,7 +183,7 @@ test('parseToOffset',(t) => {
 test('parseToUtc',(t) => {
   const string = '20181021.021245'
   const timeZone =   "UTC"
-  const dateTime = parseToUtc(string, timeZone).toString();
+  const dateTime = parseToUtc(string, timeZone);
 
   t.equal(dateTime, '2018-10-21T02:12:45Z');
   t.end();
@@ -192,7 +192,7 @@ test('parseToUtc',(t) => {
 test('parseFromUtc',(t) => {
   const string = '20181021.021245'
   const timeZone =   "UTC"
-  const dateTime = parseFromUtc(string, timeZone).toString();
+  const dateTime = parseFromUtc(string, timeZone);
 
   t.equal(dateTime, '2018-10-21T02:12:45Z');
   t.end();
@@ -200,7 +200,7 @@ test('parseFromUtc',(t) => {
 
 test('parseDatePart', (t) => {
   const string = 'T+3'
-  const dateTime = parseDatePart(string).toString();
+  const dateTime = parseDatePart(string);
   console.log("DTIME", dateTime)
   t.equal(dateTime, "2024-02-26T00:00");
   t.end();
