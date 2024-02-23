@@ -12,6 +12,7 @@ const {
 require('@js-joda/timezone')
 require('@js-joda/locale')
 const Luxon = require('luxon')
+const { parseAdjuster, adjustRelativeDate } = require('./helpers')
 const {
   DEFAULT_DATE_FORMAT,
   VISTA_DATETIME_FORMAT,
@@ -21,7 +22,6 @@ const {
   FILEMAN_DATE_FORMAT_PATTERN,
   VISTA_DATE_TIME_FORMAT_PATTERN,
   VISTA_DATE_TIME_SEPARATOR,
-  DATE_FORMAT,
   VISTA_DATE_FORMAT_ARRAY
 } = require('./constants')
 
@@ -618,25 +618,25 @@ function startOfDay(dateTime) {
    */
 
 function parseToLocal(dateString) {
-  if (!dateString) { 
-      return null;
+  if (!dateString) {
+    return null;
   }
   if (VISTA_DATE_FORMAT_PATTERN.test(dateString) || FILEMAN_DATE_FORMAT_PATTERN.test(dateString)) {
-      const correctedDateString = convertDateFromFileManToVista(dateString);
-      const paddedDateTimeString = zeroPadVistaDateTime(correctedDateString);
-      // Parsing the string into a LocalDateTime object
-      for (const format of VISTA_DATE_FORMAT_ARRAY) {
-        try {
-            // Attempt to create a formatter for each pattern and parse the dateString
-            const formatter = DateTimeFormatter.ofPattern(format.replace(/,SSS/g, '')); // Simplify format for @js-joda compatibility
-            return LocalDateTime.parse(paddedDateTimeString, formatter);
-        } catch (error) {
-            if (!(error instanceof DateTimeParseException)) {
-                // If error is not due to parsing, rethrow it
-                throw error;
-            }
-            // If parsing fails, try the next format
+    const correctedDateString = convertDateFromFileManToVista(dateString);
+    const paddedDateTimeString = zeroPadVistaDateTime(correctedDateString);
+    // Parsing the string into a LocalDateTime object
+    for (const format of VISTA_DATE_FORMAT_ARRAY) {
+      try {
+        // Attempt to create a formatter for each pattern and parse the dateString
+        const formatter = DateTimeFormatter.ofPattern(format.replace(/,SSS/g, '')); // Simplify format for @js-joda compatibility
+        return LocalDateTime.parse(paddedDateTimeString, formatter);
+      } catch (error) {
+        if (!(error instanceof DateTimeParseException)) {
+          // If error is not due to parsing, rethrow it
+          throw error;
         }
+        // If parsing fails, try the next format
+      }
     }
     throw new Error('Date string does not match any provided formats.');
   }
@@ -708,7 +708,7 @@ function parseToLocal(dateString) {
 function parseToOffset(dateString) {
   const localDateTime = parseToLocal(dateString);
   if (localDateTime === null) {
-      return null;
+    return null;
   }
   return localDateTime.atOffset(ZoneOffset.UTC);
 }
@@ -768,7 +768,7 @@ function parseToUtc(dateString, timeZone) {
   if (localDateTime === null) {
     return null;
   }
-  
+
   const zoneId = ZoneId.of(timeZone);
   const offsetDateTime = localDateTime.atZone(zoneId).toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
 
@@ -889,27 +889,35 @@ function isDatePartNow(datePart) {
      * @see #isDatePartNow(String)
      * @see RelativeDateAdjuster
      */
-
 function parseRelativeDatePart(datePart, regex) {
-  let localDateTime = null;
+  const regexPattern = /[+-]/;
+  const match = datePart.match(regexPattern);
 
+  let direction;
+  if (match) {
+    direction = match[0]; // Directly use the matched + or - character
+  }
+  let localDateTime;
   const parts = datePart.split(new RegExp(regex));
-
   if (parts.length === 1 || parts.length === 2) {
     if (isDatePartToday(parts[0])) {
-      localDateTime = new Date();
-      localDateTime.setHours(0, 0, 0, 0); // Set to start of the day
+      // Set to start of the day
+      localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT);
     } else if (isDatePartNow(parts[0])) {
-      localDateTime = new Date(); // Current date and time
+      // Current date and time
+      localDateTime = LocalDateTime.now();
     }
     if (localDateTime !== null && parts.length === 2) {
-      const relative = parseAdjuster(parts[1]); // Assuming parseAdjuster is implemented
+      // Assuming parseAdjuster and adjustRelativeDate functions are adapted for @js-joda/core
+      const relative = parseAdjuster(parts[1]);
 
       if (relative === null) {
-        // Failed to parse relative, so return null, even if the date part was successfully parsed
+        // Failed to parse relative, so return null
         return null;
       }
-      return adjustRelativeDate(localDateTime, relative, regex); // Assuming adjustRelativeDate is implemented
+
+      // Adjust the LocalDateTime based on the relative part
+      return adjustRelativeDate(localDateTime, relative, direction);
     }
   }
   return localDateTime;
@@ -1006,25 +1014,28 @@ function isDatePartPositivelyRelative(datePart) {
      */
 
 function parseDatePart(datePart) {
-  let localDateTime = null;
-
+  let localDateTime;
   if (isDatePartPositivelyRelative(datePart)) {
     localDateTime = parseRelativeDatePart(datePart, "\\+");
   } else if (isDatePartNegativelyRelative(datePart)) {
     localDateTime = parseRelativeDatePart(datePart, "\\-");
   } else if (isDatePartToday(datePart)) {
-    localDateTime = new Date();
-    localDateTime.setHours(0, 0, 0, 0); // Start of the day
+    // Equivalent to setting the time to the start of the day
+    localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT);
   } else if (isDatePartNow(datePart)) {
-    localDateTime = new Date(); // Current date and time
+    // Equivalent to the current date and time
+    localDateTime = LocalDateTime.now();
   } else if (isDatePartNoon(datePart)) {
-    localDateTime = new Date();
-    localDateTime.setHours(12, 0, 0, 0); // Noon
+    // Equivalent to setting the time to noon
+    localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.NOON);
   } else if (isDatePartMidnight(datePart)) {
-    localDateTime = new Date();
-    localDateTime.setDate(localDateTime.getDate() + 1);
-    localDateTime.setHours(0, 0, 0, 0); // Midnight, start of the next day
+    // Equivalent to setting the time to midnight at the start of the next day
+    localDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT);
+  } else {
+    // If no specific condition is met, return null or handle as needed
+    localDateTime = null;
   }
+
   return localDateTime;
 }
 
@@ -1207,6 +1218,7 @@ function parseRelativeVistaDate(dateString) {
     const timePart = dateTimeParts[1].trim();
     localDateTime = parseTimePart(localDateTime, datePart, timePart);
   }
+  console.log("DATE STRING", dateTimeParts, datePart, localDateTime)
   return localDateTime;
 }
 /**
@@ -1453,10 +1465,10 @@ function formatFileManDate(dateTime, timeZone) {
 
 function format(dateTime, pattern) {
   if (dateTime === null) {
-      return null;
+    return null;
   }
   if (pattern === null) {
-      throw new Error("Date Format Pattern must not be null");
+    throw new Error("Date Format Pattern must not be null");
   }
 
   const formatter = DateTimeFormatter.ofPattern(pattern);
@@ -1464,7 +1476,7 @@ function format(dateTime, pattern) {
 
   // Assuming VISTA_DATETIME_FORMAT is defined somewhere in your code
   if (VISTA_DATETIME_FORMAT === pattern) {
-      return removeTrailingZeros(formattedString);
+    return removeTrailingZeros(formattedString);
   }
   return formattedString;
 }

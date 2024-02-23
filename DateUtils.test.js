@@ -17,12 +17,9 @@ const {
   parseToOffset,
   parseToUtc,
   parseFromUtc,
-  parseRelativeDatePart,
   parseRelativeVistaDate,
   parseDatePart,
   parseTimePart,
-  parseTime,
-  formatDate,
 } = require('./')
 
 const test = require('tape')
@@ -156,9 +153,9 @@ test('formatFileManDate', (t) => {
 
 test('parseRelativeVistaDate', (t) => {
 
-  const data = parseRelativeVistaDate("T").toLocaleDateString();
-
-  t.equal(data, new Date().toLocaleDateString());
+  const data = parseRelativeVistaDate("T").toString();
+  const expeected = '2024-02-23T00:00'
+  t.equal(data, expeected);
   t.end();
 })
 
@@ -202,9 +199,18 @@ test('parseFromUtc',(t) => {
 });
 
 test('parseDatePart', (t) => {
-  const string = 'T'
+  const string = 'T+3'
   const dateTime = parseDatePart(string).toString();
+  console.log("DTIME", dateTime)
+  t.equal(dateTime, "2024-02-26T00:00");
+  t.end();
+})
 
-  t.equal(dateTime, '2018-10-21T00:00');
+test('parseTimePart', (t) => {
+  const string = "2018-10-21T06:45:23"
+   
+  const dateTime = parseTimePart(string, "NOW", "12PM");
+
+  t.equal(dateTime, "2018-10-21T06:45:23");
   t.end();
 })
