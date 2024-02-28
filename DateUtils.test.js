@@ -19,7 +19,7 @@ const {
   parseFromUtc,
   parseRelativeVistaDate,
   parseDatePart,
-  parseTimePart,
+  parseTimePart
 } = require('./')
 
 const test = require('tape')
@@ -142,9 +142,9 @@ test('formatFileManDateTime', t => {
 test('formatFileManDate', (t) => {
   const dateTime = LocalDate.of(2018, 10, 21)
 
-  const timeZone = 'UTC';
+  const timeZone = 'UTC'
 
-  const data = formatFileManDate(dateTime, timeZone);
+  const data = formatFileManDate(dateTime, timeZone)
 
   t.equal(data, '3181021');
   t.end();
@@ -161,44 +161,51 @@ test('parseRelativeVistaDate', (t) => {
   t.end();
 })
 
-test('parseToLocal',(t) => {
-  const string = "10/21/2018 02:12"
+test('parseRelativeVistaDate', (t) => {
+  const data = parseRelativeVistaDate('T')
+  const expeected = '2024-02-23T00:00'
+  t.equal(data, expeected)
+  t.end()
+})
 
-  const expectedDate = '2018-10-21T02:12';
+test('parseToLocal', (t) => {
+  const string = '10/21/2018 02:12'
 
-  const dateTime = parseToLocal(string).toString();
+  const expectedDate = '2018-10-21T02:12'
 
-  t.equal(dateTime, expectedDate);
-  t.end();
-});
+  const dateTime = parseToLocal(string).toString()
 
-test('parseToOffset',(t) => {
-  const dateString = "10/21/2018 02:12"
+  t.equal(dateTime, expectedDate)
+  t.end()
+})
 
-  const dateTime = parseToOffset(dateString);
+test('parseToOffset', (t) => {
+  const dateString = '10/21/2018 02:12'
 
-  const expectedDate = '2018-10-21T02:12Z';
-  t.equal(dateTime, expectedDate);
-  t.end();
-});
+  const dateTime = parseToOffset(dateString)
 
-test('parseToUtc',(t) => {
+  const expectedDate = '2018-10-21T02:12Z'
+  t.equal(dateTime, expectedDate)
+  t.end()
+})
+
+test('parseToUtc', (t) => {
   const string = '20181021.021245'
-  const timeZone =   "UTC"
-  const dateTime = parseToUtc(string, timeZone);
+  const timeZone = 'UTC'
+  const dateTime = parseToUtc(string, timeZone)
 
-  t.equal(dateTime, '2018-10-21T02:12:45Z');
-  t.end();
-});
+  t.equal(dateTime, '2018-10-21T02:12:45Z')
+  t.end()
+})
 
-test('parseFromUtc',(t) => {
+test('parseFromUtc', (t) => {
   const string = '20181021.021245'
-  const timeZone =   "UTC"
-  const dateTime = parseFromUtc(string, timeZone);
+  const timeZone = 'UTC'
+  const dateTime = parseFromUtc(string, timeZone)
 
-  t.equal(dateTime, '2018-10-21T02:12:45Z');
-  t.end();
-});
+  t.equal(dateTime, '2018-10-21T02:12:45Z')
+  t.end()
+})
 
 test('parseDatePart', (t) => {
   const string = 'T+3'
@@ -219,10 +226,10 @@ test('parseDatePart', (t) => {
 })
 
 test('parseTimePart', (t) => {
-  const string = "2018-10-21T06:45:23"
-   
-  const dateTime = parseTimePart(string, "NOW", "12PM");
+  const string = '2018-10-21T06:45:23'
 
-  t.equal(dateTime, "2018-10-21T06:45:23");
-  t.end();
+  const dateTime = parseTimePart(string, 'NOW', '12PM')
+
+  t.equal(dateTime, '2018-10-21T06:45:23')
+  t.end()
 })
