@@ -1218,7 +1218,6 @@ function parseRelativeVistaDate(dateString) {
     const timePart = dateTimeParts[1].trim();
     localDateTime = parseTimePart(localDateTime, datePart, timePart);
   }
-  console.log("DATE STRING", dateTimeParts, datePart, localDateTime)
   return localDateTime?.toString();
 }
 /**

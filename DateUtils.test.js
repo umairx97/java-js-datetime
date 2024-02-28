@@ -1,4 +1,4 @@
-const { LocalDate, ZoneId } = require('@js-joda/core')
+const { LocalDate, ZoneId, DateTimeFormatter, LocalDateTime, LocalTime } = require('@js-joda/core')
 const {
   isDatePartNoon,
   endOfDay, zeroPadVistaDateTime,
@@ -154,8 +154,10 @@ test('formatFileManDate', (t) => {
 test('parseRelativeVistaDate', (t) => {
 
   const data = parseRelativeVistaDate("T");
-  const expeected = '2024-02-23T00:00'
-  t.equal(data, expeected);
+  const today = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).toString();
+  // const expectedFormat = DateTimeFormatter.ofPattern('yyyy-MM-ddT00:00');
+  // const expected = today.format(expectedFormat);
+  t.equal(data, today);
   t.end();
 })
 
@@ -201,8 +203,18 @@ test('parseFromUtc',(t) => {
 test('parseDatePart', (t) => {
   const string = 'T+3'
   const dateTime = parseDatePart(string);
-  console.log("DTIME", dateTime)
-  t.equal(dateTime, "2024-02-26T00:00");
+  const localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).plusDays(3);
+  const expected = localDateTime.toString()
+  t.equal(dateTime, expected);
+  t.end();
+})
+
+test('parseDatePart', (t) => {
+  const string = 'T-3'
+  const dateTime = parseDatePart(string);
+  const localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).minusDays(3);
+  const expected = localDateTime.toString()
+  t.equal(dateTime, expected);
   t.end();
 })
 
