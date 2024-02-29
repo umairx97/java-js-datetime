@@ -155,17 +155,8 @@ test('parseRelativeVistaDate', (t) => {
 
   const data = parseRelativeVistaDate("T");
   const today = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).toString();
-  // const expectedFormat = DateTimeFormatter.ofPattern('yyyy-MM-ddT00:00');
-  // const expected = today.format(expectedFormat);
   t.equal(data, today);
   t.end();
-})
-
-test('parseRelativeVistaDate', (t) => {
-  const data = parseRelativeVistaDate('T')
-  const expeected = '2024-02-23T00:00'
-  t.equal(data, expeected)
-  t.end()
 })
 
 test('parseToLocal', (t) => {
