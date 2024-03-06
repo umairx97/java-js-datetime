@@ -4,12 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node Dateutils.test.js"
+    "test": "NODE_ENV=test tape Dateutils.test.js",
+    "coverage": "nyc npm run test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "nyc": "^15.1.0",
     "standard": "^17.1.0"
   },
   "dependencies": {
