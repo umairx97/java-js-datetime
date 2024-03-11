@@ -6,12 +6,12 @@ const {
   ZoneId,
   OffsetDateTime,
   DateTimeFormatter,
-  DateTimeParseException
+  DateTimeParseException,
+  ChronoUnit
 } = require('@js-joda/core')
 require('@js-joda/timezone')
 require('@js-joda/locale')
 const Luxon = require('luxon')
-const { parseAdjuster, adjustRelativeDate } = require('./helpers')
 const {
   DEFAULT_DATE_FORMAT,
   VISTA_DATETIME_FORMAT,
@@ -64,10 +64,44 @@ module.exports = {
   get30DaysFromToday,
   get120DaysFromToday,
   get3MonthsFromToday,
+  parseAdjuster,
+  adjustRelativeDate,
   startOfDay,
   isBlank,
   isNullish,
   validateTimeZone
+}
+
+const UNIT_MAP = {
+  D: ChronoUnit.DAYS,
+  M: ChronoUnit.MONTHS
+  // Add other mappings as necessary
+}
+
+// Parse adjustment string into components
+function parseAdjuster (dateAdjustment) {
+  const amount = parseInt(dateAdjustment, 10)
+  const unitToken = dateAdjustment.replace(/^\d+/, '')
+  const unit = UNIT_MAP[unitToken] || ChronoUnit.DAYS // Default to DAYS if no unit specified
+
+  if (isNaN(amount)) {
+    console.log('Failed to parse relative date adjustment', dateAdjustment)
+    return null
+  }
+
+  return { amount, unit }
+}
+
+// Apply adjustment to a LocalDateTime
+function adjustRelativeDate (localDateTime, { amount, unit }, direction) {
+  switch (direction) {
+    case '+':
+      return localDateTime.plus(amount, unit)
+    case '-':
+      return localDateTime.minus(amount, unit)
+    default:
+      return localDateTime // No adjustment if direction is not recognized
+  }
 }
 
 /**
@@ -1215,7 +1249,7 @@ function parseRelativeVistaDate (dateString) {
     const timePart = dateTimeParts[1].trim()
     localDateTime = parseTimePart(localDateTime, datePart, timePart)
   }
-  return localDateTime?.toString();
+  return localDateTime?.toString()
 }
 /**
      * Format the provided {@link OffsetDateTime} into a date string according to the provided {@code pattern},
