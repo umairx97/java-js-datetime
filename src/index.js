@@ -24,6 +24,8 @@ const {
   VISTA_DATE_FORMAT_ARRAY
 } = require('./constants')
 
+const IS_TEST = process.env.NODE_ENV === 'test'
+
 module.exports = {
   createDateFormatsFromArray,
   removeTrailingZeros,
@@ -1107,7 +1109,7 @@ function parseTime (timePart) {
     return date
   } else {
     // Log failure to parse time
-    console.trace('Failed to parse relative time [' + timePart + ']')
+    if (!IS_TEST) console.trace('Failed to parse relative time [' + timePart + ']')
     return null
   }
 }

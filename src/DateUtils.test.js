@@ -38,7 +38,8 @@ const {
   isDatePartNow,
   isDatePartMidnight,
   isDatePartNegativelyRelative,
-  isDatePartPositivelyRelative
+  isDatePartPositivelyRelative,
+  parseTime
 } = require('./')
 
 const test = require('tape')
@@ -438,11 +439,19 @@ test('parseFromUtc', (t) => {
 })
 
 test('parseDatePart', (t) => {
+  setMockDate({ dateString: '2018-10-21T06:12:45Z' })
+
   const string = 'T+3'
   const dateTime = parseDatePart(string)
   const localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).plusDays(3)
   const expected = localDateTime.toString()
+  t.equals(parseDatePart('today'), '2018-10-21T00:00')
+  t.equals(parseDatePart('now'), '2018-10-21T11:12:45')
+  t.equals(parseDatePart('noon'), '2018-10-21T12:00')
+  t.equals(parseDatePart('midnight'), undefined)
+  t.equals(parseDatePart('unhandled'), undefined, 'Correctly returns null for unhandled date parts')
   t.equal(dateTime, expected)
+  resetGlobalDate()
   t.end()
 })
 
@@ -461,5 +470,30 @@ test('parseTimePart', (t) => {
   const dateTime = parseTimePart(string, 'NOW', '12PM')
 
   t.equal(dateTime, '2018-10-21T06:45:23')
+  t.end()
+})
+
+test('parseTime function', (t) => {
+  // Successfully parses AM time
+  const morningTime = parseTime('9:30A')
+  t.equals(morningTime.getHours(), 9, 'Correctly sets hours for AM time')
+  t.equals(morningTime.getMinutes(), 30, 'Correctly sets minutes for AM time')
+
+  // Successfully parses PM time
+  const eveningTime = parseTime('9:30P')
+  t.equals(eveningTime.getHours(), 21, 'Correctly adjusts hours for PM time')
+  t.equals(eveningTime.getMinutes(), 30, 'Correctly sets minutes for PM time')
+
+  // Handles 12 AM as midnight
+  const midnightTime = parseTime('12:00A')
+  t.equals(midnightTime.getHours(), 0, 'Correctly interprets 12 AM as midnight')
+
+  // Handles 12 PM as noon
+  const noonTime = parseTime('12:00P')
+  t.equals(noonTime.getHours(), 12, 'Correctly interprets 12 PM as noon')
+
+  // Fails gracefully with incomplete format
+  t.equals(parseTime('9:00'), null, 'Returns null for missing AM/PM indicator')
+
   t.end()
 })
