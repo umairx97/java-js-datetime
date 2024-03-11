@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test tape Dateutils.test.js",
+    "test": "NODE_ENV=test tape ./src/Dateutils.test.js",
     "coverage": "nyc npm run test"
   },
   "keywords": [],
