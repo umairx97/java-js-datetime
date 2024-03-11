@@ -1,7 +1,8 @@
-const { LocalDate, ZoneId, DateTimeFormatter, LocalDateTime, LocalTime } = require('@js-joda/core')
+const { LocalDate, ZoneId, LocalDateTime, LocalTime, ChronoUnit } = require('@js-joda/core')
 const {
   isDatePartNoon,
-  endOfDay, zeroPadVistaDateTime,
+  endOfDay,
+  zeroPadVistaDateTime,
   convertDateFromFileManToVista,
   removeTrailingZeros,
   startOfDay,
@@ -18,13 +19,253 @@ const {
   parseToUtc,
   parseFromUtc,
   parseRelativeVistaDate,
+  parseAdjuster,
   parseDatePart,
-  parseTimePart
+  parseTimePart,
+  adjustRelativeDate,
+  createDateFormatsFromArray,
+  validateTimeZone,
+  isBlank,
+  isNullish,
+  getToday,
+  getYesterday,
+  getTomorrow,
+  get30DaysFromToday,
+  get120DaysFromToday,
+  get3MonthsFromToday,
+  isDateRelativeToToday,
+  isDatePartToday,
+  isDatePartNow,
+  isDatePartMidnight,
+  isDatePartNegativelyRelative,
+  isDatePartPositivelyRelative
 } = require('./')
 
 const test = require('tape')
+const { setMockDate, resetGlobalDate } = require('./test-utils')
 require('@js-joda/timezone')
 require('@js-joda/locale')
+
+test('getToday', t => {
+  setMockDate({ dateString: '2018-10-21T06:12:45Z' })
+  t.equal(getToday(), '2018-10-21')
+  resetGlobalDate()
+  t.end()
+})
+
+test('getYesterday', t => {
+  setMockDate({ dateString: '2018-10-21T06:12:45Z' })
+  t.equal(getYesterday(), '2018-10-20')
+  resetGlobalDate()
+  t.end()
+})
+
+test('getTomorrow', t => {
+  setMockDate({ dateString: '2018-10-21T06:12:45Z' })
+  t.equal(getTomorrow(), '2018-10-22')
+  resetGlobalDate()
+  t.end()
+})
+
+test('get30DaysFromToday', t => {
+  setMockDate({ dateString: '2018-10-21T06:12:45Z' })
+  t.equal(get30DaysFromToday(), '2018-11-20')
+  resetGlobalDate()
+  t.end()
+})
+
+test('get120DaysFromToday', t => {
+  setMockDate({ dateString: '2018-10-21T06:12:45Z' })
+  t.equal(get120DaysFromToday(), '2019-02-18')
+  resetGlobalDate()
+  t.end()
+})
+
+test('get3MonthsFromToday', t => {
+  setMockDate({ dateString: '2018-10-21T06:12:45Z' })
+  t.equal(get3MonthsFromToday(), '2019-01-21')
+  resetGlobalDate()
+  t.end()
+})
+
+test('isNullish function', (t) => {
+  // Test for explicitly nullish values
+  t.true(isNullish(null), 'Correctly identifies null as nullish')
+  t.true(isNullish(undefined), 'Correctly identifies undefined as nullish')
+
+  // Test for string values that are considered nullish
+  t.true(isNullish(''), 'Correctly identifies an empty string as nullish')
+  t.true(isNullish('   '), 'Correctly identifies a string of spaces as nullish')
+  t.true(isNullish('-1'), 'Correctly identifies "-1" as nullish')
+  t.true(isNullish('   -1   '), 'Correctly identifies "-1" with spaces as nullish')
+  t.true(isNullish('Invalid Date'), 'Correctly identifies "Invalid Date" as nullish')
+  t.true(isNullish('   Invalid Date   '), 'Correctly identifies "Invalid Date" with spaces as nullish')
+
+  // Test for values that are not considered nullish
+  t.false(isNullish('text'), 'Correctly identifies non-empty strings as not nullish')
+  t.false(isNullish('0'), 'Correctly identifies "0" as not nullish')
+  t.false(isNullish('1'), 'Correctly identifies "1" as not nullish')
+  t.false(isNullish('true'), 'Correctly identifies "true" as not nullish')
+  t.false(isNullish('false'), 'Correctly identifies "false" as not nullish')
+
+  t.end()
+})
+
+test('isBlank function', (t) => {
+  // Test with non-blank strings
+  t.false(isBlank('text'), 'Returns false for regular text')
+  t.false(isBlank('  text  '), 'Returns false for text with surrounding whitespace')
+
+  // Test with only whitespace strings
+  t.true(isBlank(' '), 'Returns true for a single space')
+  t.true(isBlank('    '), 'Returns true for multiple spaces')
+  t.true(isBlank('\t\n'), 'Returns true for tabs and newlines')
+
+  // Test with an empty string
+  t.true(isBlank(''), 'Returns true for an empty string')
+
+  // Since isBlank doesn't explicitly handle null or undefined, these tests expect false
+  // This behavior depends on how you want to handle non-string inputs in your implementation
+  t.false(isBlank(null), 'Returns false for null')
+  t.false(isBlank(undefined), 'Returns false for undefined')
+
+  t.end()
+})
+
+test('validateTimeZone function', (t) => {
+  // Test with a non-blank string
+  t.doesNotThrow(() => validateTimeZone('America/New_York'), 'Does not throw for valid time zone string')
+
+  try {
+    validateTimeZone('')
+  } catch (err) {
+    t.ok(err, 'throws on empty string')
+  }
+
+  t.end()
+})
+
+test('createDateFormatsFromArray function', (t) => {
+  t.equals(createDateFormatsFromArray([]), '', 'Returns an empty string for an empty array')
+  t.equals(createDateFormatsFromArray(['YYYY-MM-DD']), '[YYYY-MM-DD]', 'Correctly formats a single date format')
+  t.equals(createDateFormatsFromArray(['YYYY-MM-DD', 'MM/DD/YYYY', 'DD-MM-YYYY']), '[YYYY-MM-DD] [MM/DD/YYYY] [DD-MM-YYYY]', 'Correctly formats multiple date formats')
+
+  t.end()
+})
+
+test('adjustRelativeDate', t => {
+  const date = LocalDate.of(2018, 10, 21)
+  let result = adjustRelativeDate(date, { amount: 3, unit: ChronoUnit.DAYS }, '+')
+  t.equal(result.toString(), '2018-10-24')
+  result = adjustRelativeDate(date, { amount: 3, unit: ChronoUnit.DAYS }, '-')
+  t.equal(result.toString(), '2018-10-18')
+
+  result = adjustRelativeDate(date, { amount: 3, unit: ChronoUnit.DAYS })
+  t.equal(result.toString(), '2018-10-21')
+  t.end()
+})
+test('parseAdjuster function', (t) => {
+  // Test with a valid number and unit
+  t.equal(parseAdjuster('5d').amount, 5, 'Parses days correctly')
+  t.equal(parseAdjuster('5d').unit.toString(), 'Days', 'Parses days correctly')
+
+  // Test with an empty string
+  t.equals(parseAdjuster(''), null, 'Returns null for an empty string input')
+
+  // Test with a string that contains no digits
+  t.equals(parseAdjuster('days'), null, 'Returns null for input with no digits')
+
+  t.end()
+})
+
+test('isDateRelativeToToday function', (t) => {
+  // Test for strings that should return true
+  t.true(isDateRelativeToToday('T+1'), 'Correctly identifies a string starting with T as relative to today')
+  t.true(isDateRelativeToToday('T-10'), 'Correctly identifies a string starting with T as relative to today')
+
+  // Test for strings that should return false
+  t.false(isDateRelativeToToday('2023-01-01'), 'Correctly identifies a standard date format as not relative to today')
+  t.false(isDateRelativeToToday('Yesterday'), 'Correctly identifies a word that does not start with T as not relative to today')
+
+  // Test for edge cases
+  t.false(isDateRelativeToToday(''), 'Correctly identifies an empty string as not relative to today')
+  t.false(isDateRelativeToToday(' t+1'), 'Correctly identifies a string starting with a space and then T as not relative to today')
+
+  t.end()
+})
+
+test('isDatePartToday function', (t) => {
+  t.true(isDatePartToday('t'), 'Correctly identifies "t" as today')
+  t.true(isDatePartToday('T'), 'Correctly identifies "T" as today')
+  t.true(isDatePartToday('today'), 'Correctly identifies "today" as today')
+  t.true(isDatePartToday('Today'), 'Correctly identifies "Today" as today')
+  t.true(isDatePartToday('TODAY'), 'Correctly identifies "TODAY" as today')
+
+  // Test for strings that do not match 't' or 'today'
+  t.false(isDatePartToday('tomorrow'), 'Correctly identifies non-matching strings as not today')
+  t.false(isDatePartToday('yesterday'), 'Correctly identifies non-matching strings as not today')
+  t.false(isDatePartToday(''), 'Correctly identifies an empty string as not today')
+
+  t.end()
+})
+
+test('isDatePartNow function', (t) => {
+  // Test for strings that exactly match 'n' or 'now' in various cases
+  t.true(isDatePartNow('n'), 'Correctly identifies "n" as now')
+  t.true(isDatePartNow('N'), 'Correctly identifies "N" as now')
+  t.true(isDatePartNow('now'), 'Correctly identifies "now" as now')
+  t.true(isDatePartNow('Now'), 'Correctly identifies "Now" as now')
+  t.true(isDatePartNow('NOW'), 'Correctly identifies "NOW" as now')
+
+  // Test for strings that do not match 'n' or 'now'
+  t.false(isDatePartNow('new'), 'Correctly identifies non-matching strings as not now')
+  t.false(isDatePartNow('none'), 'Correctly identifies non-matching strings as not now')
+  t.false(isDatePartNow(''), 'Correctly identifies an empty string as not now')
+
+  t.end()
+})
+
+test('isDatePartMidnight', t => {
+  t.true(isDatePartMidnight('mid'))
+  t.false(isDatePartMidnight('midnight'))
+  t.end()
+})
+
+test('isDatePartNegativelyRelative function', (t) => {
+  // Test for strings containing '-'
+  t.false(isDatePartNegativelyRelative('yesterday'), 'Correctly identifies strings containing "-" as negatively relative')
+  t.true(isDatePartNegativelyRelative('-1'), 'Correctly identifies strings containing "-" as negatively relative')
+  t.true(isDatePartNegativelyRelative('T-1'), 'Correctly identifies strings containing "-" as negatively relative')
+
+  // // Test for strings not containing '-'
+  t.false(isDatePartNegativelyRelative('tomorrow'), 'Correctly identifies strings without "-" as not negatively relative')
+  t.false(isDatePartNegativelyRelative('T+1'), 'Correctly identifies strings without "-" as not negatively relative')
+  t.false(isDatePartNegativelyRelative('today'), 'Correctly identifies strings without "-" as not negatively relative')
+
+  // // Test with special cases
+  t.true(isDatePartNegativelyRelative('-'), 'Correctly identifies a string that is just "-" as negatively relative')
+  t.false(isDatePartNegativelyRelative(''), 'Correctly identifies an empty string as not negatively relative')
+
+  t.end()
+})
+
+test('isDatePartPositivelyRelative function', (t) => {
+  // Test for strings containing '+'
+  t.false(isDatePartPositivelyRelative('tomorrow'), 'Correctly identifies strings containing "+" as positively relative')
+  t.true(isDatePartPositivelyRelative('+1'), 'Correctly identifies strings containing "+" as positively relative')
+  t.true(isDatePartPositivelyRelative('T+1'), 'Correctly identifies strings containing "+" as positively relative')
+
+  // Test for strings not containing '+'
+  t.false(isDatePartPositivelyRelative('yesterday'), 'Correctly identifies strings without "+" as not positively relative')
+  t.false(isDatePartPositivelyRelative('T-1'), 'Correctly identifies strings without "+" as not positively relative')
+  t.false(isDatePartPositivelyRelative('today'), 'Correctly identifies strings without "+" as not positively relative')
+
+  // Test with special cases
+  t.true(isDatePartPositivelyRelative('+'), 'Correctly identifies a string that is just "+" as positively relative')
+  t.false(isDatePartPositivelyRelative(''), 'Correctly identifies an empty string as not positively relative')
+
+  t.end()
+})
 
 test('isDatePartNoon', t => {
   t.true(isDatePartNoon('noon'), '12:00:00 is noon')
@@ -146,17 +387,15 @@ test('formatFileManDate', (t) => {
 
   const data = formatFileManDate(dateTime, timeZone)
 
-  t.equal(data, '3181021');
-  t.end();
-});
-
+  t.equal(data, '3181021')
+  t.end()
+})
 
 test('parseRelativeVistaDate', (t) => {
-
-  const data = parseRelativeVistaDate("T");
-  const today = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).toString();
-  t.equal(data, today);
-  t.end();
+  const data = parseRelativeVistaDate('T')
+  const today = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).toString()
+  t.equal(data, today)
+  t.end()
 })
 
 test('parseToLocal', (t) => {
@@ -200,20 +439,20 @@ test('parseFromUtc', (t) => {
 
 test('parseDatePart', (t) => {
   const string = 'T+3'
-  const dateTime = parseDatePart(string);
-  const localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).plusDays(3);
+  const dateTime = parseDatePart(string)
+  const localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).plusDays(3)
   const expected = localDateTime.toString()
-  t.equal(dateTime, expected);
-  t.end();
+  t.equal(dateTime, expected)
+  t.end()
 })
 
 test('parseDatePart', (t) => {
   const string = 'T-3'
-  const dateTime = parseDatePart(string);
-  const localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).minusDays(3);
+  const dateTime = parseDatePart(string)
+  const localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).minusDays(3)
   const expected = localDateTime.toString()
-  t.equal(dateTime, expected);
-  t.end();
+  t.equal(dateTime, expected)
+  t.end()
 })
 
 test('parseTimePart', (t) => {
