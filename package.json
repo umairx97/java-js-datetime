@@ -1,6 +1,6 @@
 {
   "name": "mobile-framework-js",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "",
   "main": "./src/index.js",
   "scripts": {
@@ -19,7 +19,6 @@
     "@js-joda/core": "^5.6.1",
     "@js-joda/locale": "^4.8.12",
     "@js-joda/timezone": "^2.18.2",
-    "cldr-data": "^36.0.1",
     "cldrjs": "^0.5.5",
     "luxon": "^3.4.4",
     "tape": "^5.7.4"

@@ -641,7 +641,7 @@ cldr-data-downloader@1.0.0-1:
     q "1.0.1"
     yauzl "^2.10.0"
 
-cldr-data@*, cldr-data@^36.0.1:
+cldr-data@*:
   version "36.0.1"
   resolved "https://registry.npmjs.org/cldr-data/-/cldr-data-36.0.1.tgz"
   integrity sha512-74leCbj4QIBno+a8MVwO4Kiqv4J1PXDcFhlgOhh86rnLljppLxxi8odVeMjqFsnEG2xxCu98P4iO9mkNXn5v9Q==
