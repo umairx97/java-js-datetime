@@ -10,7 +10,6 @@ import {
   ChronoUnit
 } from '@js-joda/core'
 import '@js-joda/timezone'
-import '@js-joda/locale'
 import * as Luxon from 'luxon'
 import {
   DEFAULT_DATE_FORMAT,
