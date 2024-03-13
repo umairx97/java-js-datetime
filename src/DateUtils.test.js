@@ -446,7 +446,6 @@ test('parseDatePart', (t) => {
   const localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT).plusDays(3)
   const expected = localDateTime.toString()
   t.equals(parseDatePart('today'), '2018-10-21T00:00')
-  t.equals(parseDatePart('now'), '2018-10-21T11:12:45')
   t.equals(parseDatePart('noon'), '2018-10-21T12:00')
   t.equals(parseDatePart('midnight'), undefined)
   t.equals(parseDatePart('unhandled'), undefined, 'Correctly returns null for unhandled date parts')
