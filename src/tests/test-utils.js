@@ -2,12 +2,7 @@ const REAL_DATE = Date
 
 const IS_TEST = process.env.NODE_ENV === 'test'
 
-module.exports = {
-  setMockDate,
-  resetGlobalDate
-}
-
-function setMockDate ({ dateString, convertToZeroHoursDateString = false }) {
+export function setMockDate ({ dateString, convertToZeroHoursDateString = false }) {
   // Setting mockDate to pass the courseThreshold check
   if (!IS_TEST) return
 
@@ -26,6 +21,6 @@ function setMockDate ({ dateString, convertToZeroHoursDateString = false }) {
  * resets the global Date object to what it should be originally
  * Always run this function when you have used setMockDate
  */
-function resetGlobalDate () {
+export function resetGlobalDate () {
   global.Date = REAL_DATE
 }

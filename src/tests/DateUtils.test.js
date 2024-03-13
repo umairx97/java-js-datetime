@@ -1,5 +1,5 @@
-const { LocalDate, ZoneId, LocalDateTime, LocalTime, ChronoUnit } = require('@js-joda/core')
-const {
+import { LocalDate, ZoneId, LocalDateTime, LocalTime, ChronoUnit } from '@js-joda/core'
+import {
   isDatePartNoon,
   endOfDay,
   zeroPadVistaDateTime,
@@ -40,12 +40,13 @@ const {
   isDatePartNegativelyRelative,
   isDatePartPositivelyRelative,
   parseTime
-} = require('../')
+} from '../index.js'
 
-const test = require('tape')
-const { setMockDate, resetGlobalDate } = require('./test-utils')
-require('@js-joda/timezone')
-require('@js-joda/locale')
+import test from 'tape'
+import { setMockDate, resetGlobalDate } from './test-utils.js'
+
+import '@js-joda/timezone'
+import '@js-joda/locale'
 
 test('getToday', t => {
   setMockDate({ dateString: '2018-10-21T06:12:45Z' })

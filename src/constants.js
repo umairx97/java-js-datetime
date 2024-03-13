@@ -1,8 +1,8 @@
-const DEFAULT_DATE_FORMAT = 'MM/dd/yyyy'
-const VISTA_DATETIME_FORMAT = 'yyyyMMdd.HHmmss'
-const VISTA_DATE_FORMAT = 'yyyyMMdd'
-const FILEMAN_DATE_OFFSET = 17000000
-const VISTA_DATE_FORMAT_ARRAY = [
+export const DEFAULT_DATE_FORMAT = 'MM/dd/yyyy'
+export const VISTA_DATETIME_FORMAT = 'yyyyMMdd.HHmmss'
+export const VISTA_DATE_FORMAT = 'yyyyMMdd'
+export const FILEMAN_DATE_OFFSET = 17000000
+export const VISTA_DATE_FORMAT_ARRAY = [
   'MM/dd/yyyy HH:mm:ss,SSS',
   'MM/dd/yyyy HH:mm:ss',
   'MM/dd/yyyy HH:mm',
@@ -38,7 +38,7 @@ const VISTA_DATE_FORMAT_ARRAY = [
   'MMM dd yyyy'
 ]
 
-const VISTA_TIME_PATTERN = [
+export const VISTA_TIME_PATTERN = [
   'h:mm:ssa',
   'h:mma',
   'hh:mm:ssa',
@@ -61,41 +61,27 @@ const VISTA_TIME_PATTERN = [
   'HH'
 ]
 
-const VISTA_DATE_TIME_SEPARATOR = '.'
+export const VISTA_DATE_TIME_SEPARATOR = '.'
 
 /**
      * VistA Date/Time format pattern, ensuring the first token is an <b>8</b> digit string, followed by a ".", or a "."
      * with additional time digits.
      */
-// const VISTA_DATE_FORMAT_PATTERN = /^\\d{8}$|^\\d{8}\\.$|^\\d{8}\\.\\d*$/
-const VISTA_DATE_FORMAT_PATTERN = new RegExp('^\\d{8}$|^\\d{8}\\.$|^\\d{8}\\.\\d*$')
+// export const VISTA_DATE_FORMAT_PATTERN = /^\\d{8}$|^\\d{8}\\.$|^\\d{8}\\.\\d*$/
+export const VISTA_DATE_FORMAT_PATTERN = new RegExp('^\\d{8}$|^\\d{8}\\.$|^\\d{8}\\.\\d*$')
 
 /**
      * FileMan Date/Time format pattern, ensuring the first token is an <b>7</b> digit string, followed by a ".", or a
      * "." with additional time digits.
      */
-const FILEMAN_DATE_FORMAT_PATTERN = /^\\d{7}$|^\\d{7}\\.$|^\\d{7}\\.\\d*$/
+export const FILEMAN_DATE_FORMAT_PATTERN = /^\\d{7}$|^\\d{7}\\.$|^\\d{7}\\.\\d*$/
 
 /**
      * VistA & FileMan Date/Time format pattern, ensuring the string is a set of digits separated with a ".".
      */
-const VISTA_DATE_TIME_FORMAT_PATTERN = /\d+\.\d+/
+export const VISTA_DATE_TIME_FORMAT_PATTERN = /\d+\.\d+/
 
 /**
      * Format {@link String} for building VistA & FileMan Date/Time strings.
      */
-const VISTA_DATE_TIME_FORMAT_STRING = '%s.%s'
-
-module.exports = {
-  DEFAULT_DATE_FORMAT,
-  VISTA_DATETIME_FORMAT,
-  VISTA_DATE_FORMAT,
-  FILEMAN_DATE_OFFSET,
-  VISTA_DATE_FORMAT_ARRAY,
-  VISTA_TIME_PATTERN,
-  VISTA_DATE_FORMAT_PATTERN,
-  FILEMAN_DATE_FORMAT_PATTERN,
-  VISTA_DATE_TIME_FORMAT_PATTERN,
-  VISTA_DATE_TIME_FORMAT_STRING,
-  VISTA_DATE_TIME_SEPARATOR
-}
+export const VISTA_DATE_TIME_FORMAT_STRING = '%s.%s'

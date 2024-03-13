@@ -1,4 +1,4 @@
-const {
+import {
   LocalDateTime,
   LocalDate,
   LocalTime,
@@ -8,11 +8,11 @@ const {
   DateTimeFormatter,
   DateTimeParseException,
   ChronoUnit
-} = require('@js-joda/core')
-require('@js-joda/timezone')
-require('@js-joda/locale')
-const Luxon = require('luxon')
-const {
+} from '@js-joda/core'
+import '@js-joda/timezone'
+import '@js-joda/locale'
+import * as Luxon from 'luxon'
+import {
   DEFAULT_DATE_FORMAT,
   VISTA_DATETIME_FORMAT,
   VISTA_DATE_FORMAT,
@@ -22,57 +22,9 @@ const {
   VISTA_DATE_TIME_FORMAT_PATTERN,
   VISTA_DATE_TIME_SEPARATOR,
   VISTA_DATE_FORMAT_ARRAY
-} = require('./constants')
+} from './constants.js'
 
 const IS_TEST = process.env.NODE_ENV === 'test'
-
-module.exports = {
-  createDateFormatsFromArray,
-  removeTrailingZeros,
-  formatVistaDateTimeWithTimezone,
-  formatVistaDateTime,
-  endOfDay,
-  convertDateFromVistaToFileMan,
-  getNow,
-  zeroPadVistaDateTime,
-  formatFileManDateTime,
-  formatFileManDate,
-  convertDateFromFileManToVista,
-  getToday,
-  getYesterday,
-  parseToLocal,
-  parseToOffset,
-  parseToUtc,
-  parseFromUtc,
-  isDateRelativeToToday,
-  isDatePartToday,
-  isDatePartNow,
-  isDatePartNoon,
-  isDatePartMidnight,
-  parseRelativeDatePart,
-  parseRelativeVistaDate,
-  parseDatePart,
-  parseTimePart,
-  parseTime,
-  formatWithPattern,
-  formatWithTimezoneAndPattern,
-  formatLocalDate,
-  formatVistaDate,
-  formatDate,
-  formatLocalDateTime,
-  isDatePartNegativelyRelative,
-  isDatePartPositivelyRelative,
-  getTomorrow,
-  get30DaysFromToday,
-  get120DaysFromToday,
-  get3MonthsFromToday,
-  parseAdjuster,
-  adjustRelativeDate,
-  startOfDay,
-  isBlank,
-  isNullish,
-  validateTimeZone
-}
 
 const UNIT_MAP = {
   D: ChronoUnit.DAYS,
@@ -81,7 +33,7 @@ const UNIT_MAP = {
 }
 
 // Parse adjustment string into components
-function parseAdjuster (dateAdjustment) {
+export function parseAdjuster (dateAdjustment) {
   const amount = parseInt(dateAdjustment, 10)
   const unitToken = dateAdjustment.replace(/^\d+/, '')
   const unit = UNIT_MAP[unitToken] || ChronoUnit.DAYS // Default to DAYS if no unit specified
@@ -95,7 +47,7 @@ function parseAdjuster (dateAdjustment) {
 }
 
 // Apply adjustment to a LocalDateTime
-function adjustRelativeDate (localDateTime, { amount, unit }, direction) {
+export function adjustRelativeDate (localDateTime, { amount, unit }, direction) {
   switch (direction) {
     case '+':
       return localDateTime.plus(amount, unit)
@@ -133,7 +85,7 @@ function adjustRelativeDate (localDateTime, { amount, unit }, direction) {
      * @see #FILEMAN_DATE_OFFSET
      */
 
-function convertDateFromVistaToFileMan (dateString) {
+export function convertDateFromVistaToFileMan (dateString) {
   if (isNullish(dateString)) return null
 
   const VISTA_DATE_TIME_SEPARATOR = '\\.'
@@ -170,7 +122,7 @@ function convertDateFromVistaToFileMan (dateString) {
      * @see LocalDateTime
      * @see #VISTA_DATETIME_FORMAT
      */
-function formatVistaDateTime (dateTime) {
+export function formatVistaDateTime (dateTime) {
   const isJodaInstance = dateTime instanceof LocalDateTime
   const dTime = isJodaInstance ? dateTime : LocalDateTime.parse(dateTime)
   return formatWithPattern(dTime, VISTA_DATETIME_FORMAT)
@@ -198,7 +150,7 @@ function formatVistaDateTime (dateTime) {
      * @see #formatVistaDateTime(LocalDateTime)
      * @see #convertDateFromVistaToFileMan(String)
      */
-function formatFileManDateTime (dateTime) {
+export function formatFileManDateTime (dateTime) {
   const dTime = dateTime instanceof LocalDateTime ? dateTime : LocalDateTime.parse(dateTime)
   const vistaDate = formatVistaDateTime(dTime)
   return convertDateFromVistaToFileMan(vistaDate)
@@ -242,7 +194,7 @@ function formatFileManDateTime (dateTime) {
      * @see #VISTA_DATETIME_FORMAT
      * @see #formatVistaDateTime(LocalDateTime)
      */
-function formatVistaDateTimeWithTimezone (dateTime, timeZone) {
+export function formatVistaDateTimeWithTimezone (dateTime, timeZone) {
   const isJodaTime = dateTime instanceof OffsetDateTime
   const dTime = isJodaTime ? dateTime : OffsetDateTime.parse(dateTime)
   return formatWithTimezoneAndPattern(dTime, timeZone, VISTA_DATETIME_FORMAT)
@@ -266,7 +218,7 @@ function formatVistaDateTimeWithTimezone (dateTime, timeZone) {
      * @see OffsetDateTime
      */
 
-function endOfDay (input) {
+export function endOfDay (input) {
   if (!input) return null
 
   // Convert input to Luxon DateTime object
@@ -312,7 +264,7 @@ function endOfDay (input) {
      * @see #isNullish(String)
      * @see #VISTA_DATE_TIME_FORMAT_PATTERN
      */
-function zeroPadVistaDateTime (dateString) {
+export function zeroPadVistaDateTime (dateString) {
   if (isNullish(dateString)) return null
 
   if (VISTA_DATE_TIME_FORMAT_PATTERN.test(dateString)) {
@@ -359,7 +311,7 @@ function zeroPadVistaDateTime (dateString) {
      * @see #FILEMAN_DATE_FORMAT_PATTERN
      * @see #FILEMAN_DATE_OFFSET
      */
-function convertDateFromFileManToVista (dateString) {
+export function convertDateFromFileManToVista (dateString) {
   if (isNullish(dateString)) return null
 
   if (FILEMAN_DATE_FORMAT_PATTERN.test(dateString)) {
@@ -406,8 +358,8 @@ function convertDateFromFileManToVista (dateString) {
      * @see #VISTA_DATE_TIME_FORMAT_PATTERN
      */
 
-function removeTrailingZeros (dateString) {
-  // Assume isNullish function is defined elsewhere
+export function removeTrailingZeros (dateString) {
+  // Assume isNullish export function is defined elsewhere
   if (isNullish(dateString)) return null
 
   // Adjust the regex pattern to match JavaScript syntax. Example: VISTA_DATE_TIME_FORMAT_PATTERN
@@ -427,7 +379,7 @@ function removeTrailingZeros (dateString) {
   return dateString
 }
 
-function createDateFormatsFromArray (dateFormats = []) {
+export function createDateFormatsFromArray (dateFormats = []) {
   return dateFormats.map(format => `[${format}]`).join(' ')
 }
 
@@ -442,13 +394,13 @@ function createDateFormatsFromArray (dateFormats = []) {
      * @see StringUtils#isBlank(CharSequence)
      * @see IllegalArgumentException
      */
-function validateTimeZone (str) {
+export function validateTimeZone (str) {
   if (isBlank(str)) {
     throw new Error('\'timeZone\' cannot be empty')
   }
 };
 
-function isBlank (str) {
+export function isBlank (str) {
   return (/^\s*$/).test(str)
 }
 
@@ -464,7 +416,7 @@ function isBlank (str) {
      isNullish("20181021")        = false
      isNullish("20181021.061245") = false
 **/
-function isNullish (value) {
+export function isNullish (value) {
   return value === null || value === undefined ||
     value.trim() === '' || value.trim() === '-1' || value.trim() === 'Invalid Date'
 }
@@ -476,7 +428,7 @@ function isNullish (value) {
      *
      * @see LocalDateTime
      */
-function getNow () {
+export function getNow () {
   return LocalDateTime.now().toString()
 }
 
@@ -487,7 +439,7 @@ function getNow () {
      *
      * @see LocalDate
      */
-function getToday () {
+export function getToday () {
   return LocalDate.now().toString()
 }
 
@@ -498,7 +450,7 @@ function getToday () {
      *
      * @see LocalDate
      */
-function getYesterday () {
+export function getYesterday () {
   return LocalDate.now().minusDays(1).toString()
 }
 /**
@@ -508,7 +460,7 @@ function getYesterday () {
      *
      * @see LocalDate
      */
-function getTomorrow () {
+export function getTomorrow () {
   return LocalDate.now().plusDays(1).toString()
 }
 
@@ -519,7 +471,7 @@ function getTomorrow () {
      *
      * @see LocalDate
      */
-function get30DaysFromToday () {
+export function get30DaysFromToday () {
   return LocalDate.now().plusDays(30).toString()
 }
 
@@ -530,7 +482,7 @@ function get30DaysFromToday () {
      *
      * @see LocalDate
      */
-function get120DaysFromToday () {
+export function get120DaysFromToday () {
   return LocalDate.now().plusDays(120).toString()
 }
 
@@ -541,7 +493,7 @@ function get120DaysFromToday () {
 *
 * @see LocalDate
 */
-function get3MonthsFromToday () {
+export function get3MonthsFromToday () {
   return LocalDate.now().plusMonths(3).toString()
 }
 
@@ -563,7 +515,7 @@ function get3MonthsFromToday () {
      *
      * @see OffsetDateTime
      */
-function startOfDay (dateTime) {
+export function startOfDay (dateTime) {
   if (dateTime === null) return null
 
   return OffsetDateTime
@@ -652,7 +604,7 @@ function startOfDay (dateTime) {
    * @see #parseRelativeVistaDate(String)
    */
 
-function parseToLocal (dateString) {
+export function parseToLocal (dateString) {
   if (!dateString) {
     return null
   }
@@ -731,7 +683,7 @@ function parseToLocal (dateString) {
      * @see #parseToLocal(String)
      */
 
-// function parseToOffset(dateString) {
+// export function parseToOffset(dateString) {
 //   const localDateTime = parseToLocal(dateString);
 //   if (localDateTime === null) {
 //     return null;
@@ -740,7 +692,7 @@ function parseToLocal (dateString) {
 //   return utcDateTime;
 // }
 
-function parseToOffset (dateString) {
+export function parseToOffset (dateString) {
   const localDateTime = parseToLocal(dateString)
   if (localDateTime === null) {
     return null
@@ -795,7 +747,7 @@ function parseToOffset (dateString) {
    * @see #parseToLocal(String)
    */
 
-function parseToUtc (dateString, timeZone) {
+export function parseToUtc (dateString, timeZone) {
   validateTimeZone(timeZone)
 
   const localDateTime = parseToLocal(dateString)
@@ -856,7 +808,7 @@ function parseToUtc (dateString, timeZone) {
      * @see #parseToLocal(String)
      */
 
-function parseFromUtc (dateString, timeZone) {
+export function parseFromUtc (dateString, timeZone) {
   validateTimeZone(timeZone)
 
   const localDateTime = parseToLocal(dateString)
@@ -873,7 +825,7 @@ function parseFromUtc (dateString, timeZone) {
   return offsetDateTime?.toString()
 }
 
-function isDateRelativeToToday (date) {
+export function isDateRelativeToToday (date) {
   return date.startsWith('T')
 }
 
@@ -885,7 +837,7 @@ function isDateRelativeToToday (date) {
      *
      * @return {@code true} if expected to be "Today"; {@code false} otherwise
      */
-function isDatePartToday (datePart) {
+export function isDatePartToday (datePart) {
   const lower = datePart.toLowerCase()
   return lower === 't' || lower === 'today'
 }
@@ -898,7 +850,7 @@ function isDatePartToday (datePart) {
      *
      * @return {@code true} if expected to be "Now"; {@code false} otherwise
      */
-function isDatePartNow (datePart) {
+export function isDatePartNow (datePart) {
   const lowerCaseDatePart = datePart.toLowerCase()
   return lowerCaseDatePart === 'n' || lowerCaseDatePart === 'now'
 }
@@ -922,7 +874,7 @@ function isDatePartNow (datePart) {
      * @see #isDatePartNow(String)
      * @see RelativeDateAdjuster
      */
-function parseRelativeDatePart (datePart, regex) {
+export function parseRelativeDatePart (datePart, regex) {
   const regexPattern = /[+-]/
   const match = datePart.match(regexPattern)
 
@@ -964,7 +916,7 @@ function parseRelativeDatePart (datePart, regex) {
      *
      * @return {@code true} if expected to be at "Noon"; {@code false} otherwise
      */
-function isDatePartNoon (datePart = '') {
+export function isDatePartNoon (datePart = '') {
   return datePart.toLowerCase() === 'noon'
 }
 
@@ -976,7 +928,7 @@ function isDatePartNoon (datePart = '') {
 *
 * @return {@code true} if expected to be at "Midnight"; {@code false} otherwise
 */
-function isDatePartMidnight (datePart) {
+export function isDatePartMidnight (datePart) {
   return datePart.toLowerCase() === 'mid'
 }
 
@@ -988,7 +940,7 @@ function isDatePartMidnight (datePart) {
 *
 * @return {@code true} if expected to be a "negatively" adjusted; {@code false} otherwise
 */
-function isDatePartNegativelyRelative (datePart) {
+export function isDatePartNegativelyRelative (datePart) {
   return datePart.includes('-')
 }
 
@@ -1000,7 +952,7 @@ function isDatePartNegativelyRelative (datePart) {
 *
 * @return {@code true} if expected to be a "positively" adjusted; {@code false} otherwise
 */
-function isDatePartPositivelyRelative (datePart) {
+export function isDatePartPositivelyRelative (datePart) {
   return datePart.includes('+')
 }
 
@@ -1046,7 +998,7 @@ function isDatePartPositivelyRelative (datePart) {
      * @see #isDatePartMidnight(String)
      */
 
-function parseDatePart (datePart) {
+export function parseDatePart (datePart) {
   let localDateTime
   if (isDatePartPositivelyRelative(datePart)) {
     localDateTime = parseRelativeDatePart(datePart, '\\+')
@@ -1089,7 +1041,7 @@ function parseDatePart (datePart) {
      * @see #TIME_FORMAT
      */
 
-function parseTime (timePart) {
+export function parseTime (timePart) {
   let timeString = timePart
   if (timeString.endsWith('A') || timeString.endsWith('P')) {
     timeString += 'M'
@@ -1159,7 +1111,7 @@ function parseTime (timePart) {
      * @see #TIME_FORMAT
      */
 
-function parseTimePart (parsedDate, datePart, timePart) {
+export function parseTimePart (parsedDate, datePart, timePart) {
   if (!parsedDate) {
     return null
   }
@@ -1238,7 +1190,7 @@ function parseTimePart (parsedDate, datePart, timePart) {
      * @see #parseTimePart(LocalDateTime, String, String)
      */
 
-function parseRelativeVistaDate (dateString) {
+export function parseRelativeVistaDate (dateString) {
   const dateTimeParts = dateString.split('@')
   if (dateTimeParts.length > 2) { // Contains more than 1 @ symbol; invalid
     return null
@@ -1301,7 +1253,7 @@ function parseRelativeVistaDate (dateString) {
      * @see OffsetDateTime
      * @see #format(LocalDateTime, String)
      */
-function formatWithTimezoneAndPattern (dateTime, timeZone, pattern) {
+export function formatWithTimezoneAndPattern (dateTime, timeZone, pattern) {
   validateTimeZone(timeZone)
 
   const dTime = dateTime instanceof OffsetDateTime ? dateTime : OffsetDateTime.parse(dateTime)
@@ -1310,7 +1262,7 @@ function formatWithTimezoneAndPattern (dateTime, timeZone, pattern) {
   return formatWithPattern(ldt.toString(), pattern)
 }
 
-function formatWithPattern (dateTime, pattern) {
+export function formatWithPattern (dateTime, pattern) {
   if (dateTime === null) {
     return null
   }
@@ -1352,7 +1304,7 @@ function formatWithPattern (dateTime, pattern) {
      * @see LocalDate
      * @see #DEFAULT_DATE_FORMAT
      */
-function formatLocalDate (date) {
+export function formatLocalDate (date) {
   if (date === null) return null
 
   return formatWithPattern(
@@ -1376,7 +1328,7 @@ function formatLocalDate (date) {
      * @see LocalDateTime
      * @see #DEFAULT_DATE_FORMAT
      */
-function formatLocalDateTime (dateTime) {
+export function formatLocalDateTime (dateTime) {
   return formatWithPattern(dateTime, DEFAULT_DATE_FORMAT)
 }
 
@@ -1396,7 +1348,7 @@ function formatLocalDateTime (dateTime) {
      * @see LocalDate
      * @see #VISTA_DATE_FORMAT
      */
-function formatVistaDate (date) {
+export function formatVistaDate (date) {
   if (date === null) return null
   const isJodaInstance = date instanceof LocalDate
   const dateTime = isJodaInstance ? date : LocalDate.parse(date)
@@ -1424,7 +1376,7 @@ function formatVistaDate (date) {
      * @see #convertDateFromVistaToFileMan(String)
      */
 
-function formatFileManDate (dateTime, timeZone) {
+export function formatFileManDate (dateTime, timeZone) {
   const dTime = dateTime instanceof LocalDate ? dateTime : LocalDate.parse(dateTime)
   const vistaDate = formatVistaDate(dTime, timeZone)
   return convertDateFromVistaToFileMan(vistaDate)
@@ -1495,7 +1447,7 @@ function formatFileManDate (dateTime, timeZone) {
      * @see #removeTrailingZeros(String)
      */
 
-function format (dateTime, pattern) {
+export function format (dateTime, pattern) {
   if (dateTime === null) {
     return null
   }
@@ -1513,6 +1465,6 @@ function format (dateTime, pattern) {
   return formattedString
 }
 
-function formatDate (dateTime, timeZone) {
+export function formatDate (dateTime, timeZone) {
   return format(dateTime, timeZone, DEFAULT_DATE_FORMAT)
 }
