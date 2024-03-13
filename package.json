@@ -1,11 +1,12 @@
 {
   "name": "mobile-framework-js",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "",
-  "main": "./src/index.js",
+  "main": "./dist/mobile-framework.js",
   "scripts": {
     "test": "NODE_ENV=test tape ./src/tests/*",
-    "coverage": "nyc npm run test"
+    "coverage": "nyc npm run test",
+    "build": "browserify ./src/index.js -p esmify > ./dist/mobile-framework.js"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +22,21 @@
     "@js-joda/timezone": "^2.18.2",
     "cldr-data": "^36.0.1",
     "cldrjs": "^0.5.5",
+    "esmify": "^2.1.1",
+    "browserify": "^17.0.0",
     "luxon": "^3.4.4",
     "tape": "^5.7.4"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
