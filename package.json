@@ -1,8 +1,8 @@
 {
   "name": "mobile-framework-js",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "",
-  "main": "./dist/mobile-framework.js",
+  "main": "./src/index.js",
   "scripts": {
     "test": "NODE_ENV=test tape ./src/tests/*",
     "coverage": "nyc npm run test",
