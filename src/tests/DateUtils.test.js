@@ -40,7 +40,7 @@ const {
   isDatePartNegativelyRelative,
   isDatePartPositivelyRelative,
   parseTime
-} = require('./')
+} = require('../')
 
 const test = require('tape')
 const { setMockDate, resetGlobalDate } = require('./test-utils')
