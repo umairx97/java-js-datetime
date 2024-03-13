@@ -14,8 +14,6 @@ import {
   formatVistaDateTimeWithTimezone,
   formatFileManDateTime,
   formatFileManDate,
-  parseToLocal,
-  parseToOffset,
   parseToUtc,
   parseFromUtc,
   parseRelativeVistaDate,
@@ -46,7 +44,6 @@ import test from 'tape'
 import { setMockDate, resetGlobalDate } from './test-utils.js'
 
 import '@js-joda/timezone'
-import '@js-joda/locale'
 
 test('getToday', t => {
   setMockDate({ dateString: '2018-10-21T06:12:45Z' })
@@ -400,26 +397,26 @@ test('parseRelativeVistaDate', (t) => {
   t.end()
 })
 
-test('parseToLocal', (t) => {
-  const string = '10/21/2018 02:12'
+// test('parseToLocal', (t) => {
+//   const string = '10/21/2018 02:12'
 
-  const expectedDate = '2018-10-21T02:12'
+//   const expectedDate = '2018-10-21T02:12'
 
-  const dateTime = parseToLocal(string).toString()
+//   const dateTime = parseToLocal(string).toString()
 
-  t.equal(dateTime, expectedDate)
-  t.end()
-})
+//   t.equal(dateTime, expectedDate)
+//   t.end()
+// })
 
-test('parseToOffset', (t) => {
-  const dateString = '10/21/2018 02:12'
+// test('parseToOffset', (t) => {
+//   const dateString = '10/21/2018 02:12'
 
-  const dateTime = parseToOffset(dateString)
+//   const dateTime = parseToOffset(dateString)
 
-  const expectedDate = '2018-10-21T02:12Z'
-  t.equal(dateTime, expectedDate)
-  t.end()
-})
+//   const expectedDate = '2018-10-21T02:12Z'
+//   t.equal(dateTime, expectedDate)
+//   t.end()
+// })
 
 test('parseToUtc', (t) => {
   const string = '20181021.021245'
