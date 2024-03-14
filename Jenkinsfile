@@ -123,7 +123,7 @@ spec:
                   git config --global user.name ${VA_BITBT_USER}
                   mkdir -p ./quality-reports/${SERVICE_NAME}-v${VERSION}
                   echo "mkdir -p -m a=rw ./quality-reports/${SERVICE_NAME}-v${VERSION}"
-                  cp coverage/temp/*.json quality-reports/${SERVICE_NAME}-v${VERSION}
+                  cp coverage/tmp/*.json quality-reports/${SERVICE_NAME}-v${VERSION}
                   cd quality-reports
                   git add * && git commit -m 'new test report' && git push --set-upstream origin master
                   cd ..
