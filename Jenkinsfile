@@ -109,7 +109,7 @@ spec:
           usernamePassword(credentialsId: '76ec1690-dbb5-49a5-82b3-df29b41d60ba',  passwordVariable: 'VA_BITBT_PWD', usernameVariable: 'VA_BITBT_USER')
           ]) {
             container('node') {
-              dir('./src') {
+              dir('./') {
                 sh """
                   npm install
                   npm run coverage

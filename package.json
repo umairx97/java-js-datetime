@@ -20,6 +20,7 @@
     "@js-joda/core": "^5.6.1",
     "@js-joda/timezone": "^2.18.2",
     "luxon": "^3.4.4",
+    "sonarqube-scanner": "^3.3.0",
     "tape": "^5.7.4"
   },
   "browserslist": {
