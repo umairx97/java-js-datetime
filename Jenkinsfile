@@ -111,9 +111,8 @@ spec:
             container('node') {
               dir('./src') {
                 sh """
-                  ../set_npmrc.sh
-                  yarn install
-                  yarn test --collect-coverage
+                  npm install
+                  npm run coverage
                 """
 
                 archiveArtifacts artifacts: "coverage/*"
@@ -124,11 +123,7 @@ spec:
                   git config --global user.name ${VA_BITBT_USER}
                   mkdir -p ./quality-reports/${SERVICE_NAME}-v${VERSION}
                   echo "mkdir -p -m a=rw ./quality-reports/${SERVICE_NAME}-v${VERSION}"
-                  cd coverage
-                  ls | xargs -n1 -I{} mv {} ${dateStamp}_{}
-                  cd ..
-                  cp coverage/*.info quality-reports/${SERVICE_NAME}-v${VERSION}
-                  cp coverage/*.json quality-reports/${SERVICE_NAME}-v${VERSION}
+                  cp coverage/temp/*.json quality-reports/${SERVICE_NAME}-v${VERSION}
                   cd quality-reports
                   git add * && git commit -m 'new test report' && git push --set-upstream origin master
                   cd ..
