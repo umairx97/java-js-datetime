@@ -1,3 +1,4 @@
 {
-    "report-dir": "./coverage"
+    "report-dir": "./coverage",
+    "reporter": ["lcov"]
 }

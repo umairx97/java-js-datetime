@@ -115,6 +115,8 @@ spec:
                   npm run coverage
                 """
 
+                archiveArtifacts artifacts: "coverage/*"
+
                 sh """
                   git clone https://${VA_BITBT_USER}:${VA_BITBT_PWD}@${REPORTS_URL} || true
                   git config --global user.email user@va.gov
