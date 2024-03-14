@@ -151,7 +151,7 @@ spec:
             dir('./') {
               withSonarQubeEnv('SonarQube') {
                 /* Run the sonar scan */
-                sh "node_modules/sonarqube-scanner/dist/bin/sonar-scanner -Dsonar.sources=src -Dsonar.tests=src -Dsonar.test.inclusions=mobile-framework-js/src/tests -Dsonar.scm.exclusions.disabled=true  -Dsonar.projectName=mobile-framework-js -Dsonar.projectKey=mobile-framework-js -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${MAP_SONARQUBE_API} -Dsonar.javascript.lcov.reportPaths=coverage/${dateStamp}_lcov.info -Dsonar.clover.reportPath=coverage/${dateStamp}_clover.xml"
+                sh "node_modules/sonarqube-scanner/dist/bin/sonar-scanner -Dsonar.sources=src -Dsonar.tests=src -Dsonar.test.inclusions=mobile-framework-js/src/tests -Dsonar.scm.exclusions.disabled=true  -Dsonar.projectName=mobile-framework-js -Dsonar.projectKey=mobile-framework-js -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${MAP_SONARQUBE_API} -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info -Dsonar.clover.reportPath=coverage/clover.xml"
               }
             }
           }
