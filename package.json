@@ -5,7 +5,7 @@
   "main": "./src/index.js",
   "scripts": {
     "test": "NODE_ENV=test tape ./src/tests/*",
-    "coverage": "c8 npm run test"
+    "coverage": "c8 -o ./coverage npm run test"
   },
   "keywords": [],
   "author": "",
