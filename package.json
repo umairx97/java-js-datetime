@@ -5,13 +5,14 @@
   "main": "./src/index.js",
   "scripts": {
     "test": "NODE_ENV=test tape ./src/tests/*",
-    "coverage": "nyc npm run test"
+    "coverage": "c8 npm run test"
   },
   "keywords": [],
   "author": "",
   "type": "module",
   "license": "ISC",
   "devDependencies": {
+    "c8": "^9.1.0",
     "nyc": "^15.1.0",
     "standard": "^17.1.0"
   },
