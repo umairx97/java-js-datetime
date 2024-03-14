@@ -115,7 +115,7 @@ spec:
                   npm run coverage
                 """
 
-                archiveArtifacts artifacts: "coverage/*"
+                archiveArtifacts artifacts: "coverage/tmp/*"
 
                 sh """
                   git clone https://${VA_BITBT_USER}:${VA_BITBT_PWD}@${REPORTS_URL} || true
