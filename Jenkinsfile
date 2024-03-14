@@ -148,7 +148,7 @@ spec:
           usernamePassword(credentialsId: '76ec1690-dbb5-49a5-82b3-df29b41d60ba',  passwordVariable: 'VA_BITBT_PWD', usernameVariable: 'VA_BITBT_USER')
         ]) {
           container('node') {
-            dir('./src') {
+            dir('./') {
               withSonarQubeEnv('SonarQube') {
                 /* Run the sonar scan */
                 sh "node_modules/sonarqube-scanner/dist/bin/sonar-scanner -Dsonar.sources=src -Dsonar.tests=src -Dsonar.test.inclusions=mobile-framework-js/src/tests -Dsonar.scm.exclusions.disabled=true  -Dsonar.projectName=mobile-framework-js -Dsonar.projectKey=mobile-framework-js -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${MAP_SONARQUBE_API} -Dsonar.javascript.lcov.reportPaths=coverage/${dateStamp}_lcov.info -Dsonar.clover.reportPath=coverage/${dateStamp}_clover.xml"
@@ -156,7 +156,7 @@ spec:
             }
           }
           container('maven') {
-            dir('./src') {
+            dir('./') {
                 /* Download the CNES Report Generation Tool */
                 sh "curl -u ${VA_NEXUS_USER}:${VA_NEXUS_PWD} ${CNES_JAR_LOCATION}/${CNESREPORT_JAR} -O"
                 /* Create a Report of the Sonar Results */
