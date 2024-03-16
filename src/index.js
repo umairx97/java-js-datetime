@@ -1465,5 +1465,5 @@ export function format (dateTime, pattern) {
 }
 
 export function formatDate (dateTime, timeZone) {
-  return format(dateTime, timeZone, DEFAULT_DATE_FORMAT)
+  return format(dateTime, timeZone)
 }
