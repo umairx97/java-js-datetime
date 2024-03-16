@@ -1375,9 +1375,9 @@ export function formatVistaDate (date) {
      * @see #convertDateFromVistaToFileMan(String)
      */
 
-export function formatFileManDate (dateTime, timeZone) {
+export function formatFileManDate (dateTime) {
   const dTime = dateTime instanceof LocalDate ? dateTime : LocalDate.parse(dateTime)
-  const vistaDate = formatVistaDate(dTime, timeZone)
+  const vistaDate = formatVistaDate(dTime)
   return convertDateFromVistaToFileMan(vistaDate)
 }
 
