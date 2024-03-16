@@ -1132,7 +1132,7 @@ export function parseTimePart (parsedDate, datePart, timePart) {
     parsedDate.setHours(0, 0, 0, 0)
   } else {
     // Assuming parseTime returns a Date object or null
-    const time = parseTime(timePart, parsedDate)
+    const time = parseTime(timePart)
     if (time === null) {
       return null
     }
