@@ -17,6 +17,8 @@ import {
   parseToUtc,
   parseFromUtc,
   parseRelativeVistaDate,
+  parseToLocal,
+  parseToOffset,
   parseAdjuster,
   parseDatePart,
   parseTimePart,
@@ -397,26 +399,26 @@ test('parseRelativeVistaDate', (t) => {
   t.end()
 })
 
-// test('parseToLocal', (t) => {
-//   const string = '10/21/2018 02:12'
+test('parseToLocal', (t) => {
+  const string = '3181021.021245'
 
-//   const expectedDate = '2018-10-21T02:12'
+  const expectedDate = '2018-10-21T02:12:45'
+  const dateTime = parseToLocal(string)
+  console.log("LOCAL", dateTime)
 
-//   const dateTime = parseToLocal(string).toString()
+  t.equal(dateTime, expectedDate)
+  t.end()
+})
 
-//   t.equal(dateTime, expectedDate)
-//   t.end()
-// })
+test('parseToOffset', (t) => {
+  const dateString = '3181021.021245'
 
-// test('parseToOffset', (t) => {
-//   const dateString = '10/21/2018 02:12'
+  const dateTime = parseToOffset(dateString)
 
-//   const dateTime = parseToOffset(dateString)
-
-//   const expectedDate = '2018-10-21T02:12Z'
-//   t.equal(dateTime, expectedDate)
-//   t.end()
-// })
+  const expectedDate = '2018-10-21T02:12:45Z'
+  t.equal(dateTime, expectedDate)
+  t.end()
+})
 
 test('parseToUtc', (t) => {
   const string = '20181021.021245'

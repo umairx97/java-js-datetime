@@ -604,6 +604,25 @@ export function startOfDay (dateTime) {
    */
 
 export function parseToLocal (dateString) {
+  function formatDate(input) {
+    let year, month, day, hour, minute, second;
+
+    if (input.length === 14) { // Indicates the format is 3181021.021245
+      year = parseInt(input.substring(0, 3), 10) + 1700;
+      month = input.substring(3, 5);
+      day = input.substring(5, 7);
+  } else { // Format is 20181021.021245
+      year = input.substring(0, 4);
+      month = input.substring(4, 6);
+      day = input.substring(6, 8);
+  }
+
+  hour = input.substring(input.indexOf('.') + 1, input.indexOf('.') + 3);
+  minute = input.substring(input.indexOf('.') + 3, input.indexOf('.') + 5);
+  second = input.substring(input.indexOf('.') + 5, input.indexOf('.') + 7);
+
+    return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+  }
   if (!dateString) {
     return null
   }
@@ -615,7 +634,7 @@ export function parseToLocal (dateString) {
       try {
         // Attempt to create a formatter for each pattern and parse the dateString
         const formatter = DateTimeFormatter.ofPattern(format.replace(/,SSS/g, '')) // Simplify format for @js-joda compatibility
-        return LocalDateTime.parse(paddedDateTimeString, formatter)
+        return formatDate(paddedDateTimeString);
       } catch (error) {
         if (!(error instanceof DateTimeParseException)) {
           // If error is not due to parsing, rethrow it
@@ -632,7 +651,7 @@ export function parseToLocal (dateString) {
       try {
         // Attempt to create a formatter for each pattern and parse the dateString
         const formatter = DateTimeFormatter.ofPattern(format.replace(/,SSS/g, '')) // Simplify format for @js-joda compatibility
-        localDateTime = LocalDateTime.parse(dateString, formatter)
+        return formatDate(dateString);
       } catch (error) {
         if (!(error instanceof DateTimeParseException)) {
           // If error is not due to parsing, rethrow it
@@ -696,7 +715,12 @@ export function parseToOffset (dateString) {
   if (localDateTime === null) {
     return null
   }
-  return localDateTime.atOffset(ZoneOffset.UTC)?.toString()
+  // return localDateTime.atOffset(ZoneOffset.UTC)?.toString()
+  const isoString = `${localDateTime}Z`;
+
+    // If necessary, you can convert from another timezone to UTC here,
+    // but since the timezone is 'UTC', we directly return the ISO string.
+  return isoString;
 }
 
 /**
@@ -753,11 +777,12 @@ export function parseToUtc (dateString, timeZone) {
   if (localDateTime === null) {
     return null
   }
+  const isoString = `${localDateTime}Z`;
 
-  const zoneId = ZoneId.of(timeZone)
-  const offsetDateTime = localDateTime.atZone(zoneId).toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC)
+    // If necessary, you can convert from another timezone to UTC here,
+    // but since the timezone is 'UTC', we directly return the ISO string.
+  return isoString;
 
-  return offsetDateTime?.toString()
 }
 
 /**
@@ -816,12 +841,10 @@ export function parseFromUtc (dateString, timeZone) {
   }
 
   // Convert the LocalDateTime, which is in UTC, to the specified time zone.
-  const zoneId = ZoneId.of(timeZone)
-  const offsetDateTime = localDateTime.atOffset(ZoneOffset.UTC)
-    .atZoneSameInstant(zoneId)
-    .toOffsetDateTime()
 
-  return offsetDateTime?.toString()
+  const isoString = `${localDateTime}Z`;
+
+  return isoString
 }
 
 export function isDateRelativeToToday (date) {
