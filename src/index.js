@@ -6,7 +6,6 @@ import {
   ZoneId,
   OffsetDateTime,
   DateTimeFormatter,
-  DateTimeParseException,
   ChronoUnit
 } from '@js-joda/core'
 import '@js-joda/timezone'
@@ -19,8 +18,7 @@ import {
   FILEMAN_DATE_OFFSET,
   FILEMAN_DATE_FORMAT_PATTERN,
   VISTA_DATE_TIME_FORMAT_PATTERN,
-  VISTA_DATE_TIME_SEPARATOR,
-  VISTA_DATE_FORMAT_ARRAY
+  VISTA_DATE_TIME_SEPARATOR
 } from './constants.js'
 
 const IS_TEST = process.env.NODE_ENV === 'test'
@@ -603,66 +601,148 @@ export function startOfDay (dateTime) {
    * @see #parseRelativeVistaDate(String)
    */
 
-export function parseToLocal (dateString) {
-  function formatDate(input) {
-    let year, month, day, hour, minute, second;
+export function parseToLocal (input) {
+  if (!input || input === 'Invalid Date') return null
 
-    if (input.length === 14) { // Indicates the format is 3181021.021245
-      year = parseInt(input.substring(0, 3), 10) + 1700;
-      month = input.substring(3, 5);
-      day = input.substring(5, 7);
-  } else { // Format is 20181021.021245
-      year = input.substring(0, 4);
-      month = input.substring(4, 6);
-      day = input.substring(6, 8);
+  // Handle specific keywords
+  const currentDate = new Date() // Fixed current date for this example
+  switch (input.toUpperCase()) {
+    case 'T':
+    case 'TODAY':
+      return currentDate.toISOString().substring(0, 16)
+    case 'N':
+    case 'NOW':
+      return currentDate.toISOString().substring(0, 19).replace('T', '')
+    case 'NOON':
+      return currentDate.toISOString().substring(0, 10) + 'T12:00:00'
+    case 'MIDNIGHT':
+      return new Date(currentDate.getTime() + 86400000).toISOString().substring(0, 16)
   }
 
-  hour = input.substring(input.indexOf('.') + 1, input.indexOf('.') + 3);
-  minute = input.substring(input.indexOf('.') + 3, input.indexOf('.') + 5);
-  second = input.substring(input.indexOf('.') + 5, input.indexOf('.') + 7);
+  // Handle dynamic date/time adjustments
+  if (/^T[+-].+/.test(input)) {
+    return handleDynamicDate(input, currentDate)
+  }
 
-    return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+  // Handle standard date/time formats
+  const matches = input.match(/^(\d{1,7})(\d{2})(\d{2})\.?(\d{2})?(\d{2})?(\d{2})?.*$/)
+  if (matches) {
+    const year = matches[1].length === 7 ? '2' + matches[1] : matches[1]
+    const month = matches[2]
+    const day = matches[3]
+    const hour = matches[4] || '00'
+    const minute = matches[5] || '00'
+    const second = matches[6] || '00'
+    return `${year}-${month}-${day}T${hour}:${minute}:${second}`
   }
-  if (!dateString) {
-    return null
-  }
-  if (VISTA_DATE_FORMAT_PATTERN.test(dateString) || FILEMAN_DATE_FORMAT_PATTERN.test(dateString)) {
-    const correctedDateString = convertDateFromFileManToVista(dateString)
-    const paddedDateTimeString = zeroPadVistaDateTime(correctedDateString)
-    // Parsing the string into a LocalDateTime object
-    for (const format of VISTA_DATE_FORMAT_ARRAY) {
-      try {
-        // Attempt to create a formatter for each pattern and parse the dateString
-        const formatter = DateTimeFormatter.ofPattern(format.replace(/,SSS/g, '')) // Simplify format for @js-joda compatibility
-        return formatDate(paddedDateTimeString);
-      } catch (error) {
-        if (!(error instanceof DateTimeParseException)) {
-          // If error is not due to parsing, rethrow it
-          throw error
-        }
-        // If parsing fails, try the next format
-      }
-    }
-    throw new Error('Date string does not match any provided formats.')
-  }
-  let localDateTime = parseRelativeVistaDate(dateString)
-  if (!localDateTime) {
-    for (const format of VISTA_DATE_FORMAT_ARRAY) {
-      try {
-        // Attempt to create a formatter for each pattern and parse the dateString
-        const formatter = DateTimeFormatter.ofPattern(format.replace(/,SSS/g, '')) // Simplify format for @js-joda compatibility
-        return formatDate(dateString);
-      } catch (error) {
-        if (!(error instanceof DateTimeParseException)) {
-          // If error is not due to parsing, rethrow it
-          throw error
-        }
-        // If parsing fails, try the next format
-      }
-    }
-  }
-  return localDateTime
+
+  throw new Error('DateTimeParseException')
 }
+
+function handleDynamicDate (input, baseDate) {
+  const dateAdjustment = input.match(/^T([+-])(\d+)([DWMH'@]*)(.*)$/)
+  if (!dateAdjustment) throw new Error('DateTimeParseException')
+
+  const direction = dateAdjustment[1]
+  const amount = parseInt(dateAdjustment[2], 10)
+  const unit = dateAdjustment[3]
+  const timeAdjustment = dateAdjustment[4]
+  const timeMatches = timeAdjustment.match(/(\d{1,2}):?(\d{2})?/)
+
+  const date = new Date(baseDate.getTime())
+
+  switch (unit) {
+    case 'D':
+      date.setDate(date.getDate() + (direction === '+' ? amount : -amount))
+      break
+    case 'W':
+      date.setDate(date.getDate() + (direction === '+' ? amount * 7 : -amount * 7))
+      break
+    case 'M':
+      date.setMonth(date.getMonth() + (direction === '+' ? amount : -amount))
+      break
+    case 'H':
+      date.setHours(date.getHours() + (direction === '+' ? amount : -amount))
+      break
+    case "'":
+      date.setMinutes(date.getMinutes() + (direction === '+' ? amount : -amount))
+      break
+    case '@':
+      if (timeMatches) {
+        date.setHours(parseInt(timeMatches[1], 10), timeMatches[2] ? parseInt(timeMatches[2], 10) : 0, 0)
+      } else if (timeAdjustment.toUpperCase() === 'NOON') {
+        date.setHours(12, 0, 0)
+      } else {
+        throw new Error('DateTimeParseException')
+      }
+      break
+    default:
+      throw new Error('DateTimeParseException')
+  }
+
+  return date.toISOString().substring(0, 19).replace('T', ' ')
+}
+
+// export function parseToLocal (dateString) {
+//   function formatDate (input) {
+//     let year, month, day, hour, minute, second
+
+//     if (input.length === 14) { // Indicates the format is 3181021.021245
+//       year = parseInt(input.substring(0, 3), 10) + 1700
+//       month = input.substring(3, 5)
+//       day = input.substring(5, 7)
+//     } else { // Format is 20181021.021245
+//       year = input.substring(0, 4)
+//       month = input.substring(4, 6)
+//       day = input.substring(6, 8)
+//     }
+
+//     hour = input.substring(input.indexOf('.') + 1, input.indexOf('.') + 3)
+//     minute = input.substring(input.indexOf('.') + 3, input.indexOf('.') + 5)
+//     second = input.substring(input.indexOf('.') + 5, input.indexOf('.') + 7)
+
+//     return `${year}-${month}-${day}T${hour}:${minute}:${second}`
+//   }
+//   if (!dateString) {
+//     return null
+//   }
+//   if (VISTA_DATE_FORMAT_PATTERN.test(dateString) || FILEMAN_DATE_FORMAT_PATTERN.test(dateString)) {
+//     const correctedDateString = convertDateFromFileManToVista(dateString)
+//     const paddedDateTimeString = zeroPadVistaDateTime(correctedDateString)
+//     // Parsing the string into a LocalDateTime object
+//     for (const format of VISTA_DATE_FORMAT_ARRAY) {
+//       try {
+//         // Attempt to create a formatter for each pattern and parse the dateString
+//         const formatter = DateTimeFormatter.ofPattern(format.replace(/,SSS/g, '')) // Simplify format for @js-joda compatibility
+//         return formatDate(paddedDateTimeString)
+//       } catch (error) {
+//         if (!(error instanceof DateTimeParseException)) {
+//           // If error is not due to parsing, rethrow it
+//           throw error
+//         }
+//         // If parsing fails, try the next format
+//       }
+//     }
+//     throw new Error('Date string does not match any provided formats.')
+//   }
+//   const localDateTime = parseRelativeVistaDate(dateString)
+//   if (!localDateTime) {
+//     for (const format of VISTA_DATE_FORMAT_ARRAY) {
+//       try {
+//         // Attempt to create a formatter for each pattern and parse the dateString
+//         const formatter = DateTimeFormatter.ofPattern(format.replace(/,SSS/g, '')) // Simplify format for @js-joda compatibility
+//         return formatDate(dateString)
+//       } catch (error) {
+//         if (!(error instanceof DateTimeParseException)) {
+//           // If error is not due to parsing, rethrow it
+//           throw error
+//         }
+//         // If parsing fails, try the next format
+//       }
+//     }
+//   }
+//   return localDateTime
+// }
 
 /**
      * Parse a Date/Time {@link String} into an {@link OffsetDateTime} at "UTC" Offset. If the date is determined to be
@@ -716,11 +796,11 @@ export function parseToOffset (dateString) {
     return null
   }
   // return localDateTime.atOffset(ZoneOffset.UTC)?.toString()
-  const isoString = `${localDateTime}Z`;
+  const isoString = `${localDateTime}Z`
 
-    // If necessary, you can convert from another timezone to UTC here,
-    // but since the timezone is 'UTC', we directly return the ISO string.
-  return isoString;
+  // If necessary, you can convert from another timezone to UTC here,
+  // but since the timezone is 'UTC', we directly return the ISO string.
+  return isoString
 }
 
 /**
@@ -777,12 +857,11 @@ export function parseToUtc (dateString, timeZone) {
   if (localDateTime === null) {
     return null
   }
-  const isoString = `${localDateTime}Z`;
+  const isoString = `${localDateTime}Z`
 
-    // If necessary, you can convert from another timezone to UTC here,
-    // but since the timezone is 'UTC', we directly return the ISO string.
-  return isoString;
-
+  // If necessary, you can convert from another timezone to UTC here,
+  // but since the timezone is 'UTC', we directly return the ISO string.
+  return isoString
 }
 
 /**
@@ -842,7 +921,7 @@ export function parseFromUtc (dateString, timeZone) {
 
   // Convert the LocalDateTime, which is in UTC, to the specified time zone.
 
-  const isoString = `${localDateTime}Z`;
+  const isoString = `${localDateTime}Z`
 
   return isoString
 }

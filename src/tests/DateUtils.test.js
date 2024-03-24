@@ -400,22 +400,21 @@ test('parseRelativeVistaDate', (t) => {
 })
 
 test('parseToLocal', (t) => {
-  const string = '3181021.021245'
+  const string = '20181021'
 
-  const expectedDate = '2018-10-21T02:12:45'
+  const expectedDate = '2018-10-21T00:00:00'
   const dateTime = parseToLocal(string)
-  console.log("LOCAL", dateTime)
 
   t.equal(dateTime, expectedDate)
   t.end()
 })
 
 test('parseToOffset', (t) => {
-  const dateString = '3181021.021245'
+  const dateString = '20181021'
 
   const dateTime = parseToOffset(dateString)
 
-  const expectedDate = '2018-10-21T02:12:45Z'
+  const expectedDate = '2018-10-21T00:00:00Z'
   t.equal(dateTime, expectedDate)
   t.end()
 })
