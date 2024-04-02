@@ -3,12 +3,7 @@ println "Date Stamp is ${dateStamp}"
 
 pipeline {
   parameters {
-        string(name: 'DEPLOY_VERSION', defaultValue: '1.0.0', description: 'Version to Deploy')
-        string(name: 'NS', defaultValue: 'sqa', description: 'Only used if DEPLOY_ONLY is true')
-        choice(name: 'DEPLOY_ONLY', choices: ['false' , 'true'], description: 'Only Run Deploy stage')
-	choice(name: 'RUN_VV', choices: ['false', 'true'], description: 'Do you want to run V&V?')
-        choice(name: 'VV_DRY_RUN', choices: ['false', 'true'], description: 'If true, will not push reports to coderepo and will not create Jira ticket requesting review.')
-        choice(name: 'VV_COMMAND', choices: ['report', 'request-review', 'validate', 'release',], description: 'V&V command to run')
+         booleanParam(name: 'PUBLISH', defaultValue: false, description: 'Publish component to registry.')
   
   }
   agent {
@@ -213,6 +208,26 @@ spec:
         } //withCredentials
       } //steps
     } //stage
+
+    stage('Publish') {
+      when {
+        expression {
+          params.PUBLISH == true
+        }
+      }
+      steps {
+        script {
+          withCredentials([
+                           string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
+                           string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER')
+                          ]) {
+            container('maven') {
+              sh './publish.sh'
+            } // container
+          } // withCredentials
+        } // script
+      } // steps
+    } // stage
   } // stages
 
   post {
