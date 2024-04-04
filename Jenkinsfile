@@ -1,15 +1,15 @@
-def dateStamp = Calendar.getInstance().getTime().format('YYYYMMdd-hhmmss',TimeZone.getTimeZone('CST'))
-println "Date Stamp is ${dateStamp}"
+@Library(['scanhub', 'codeql-linux'])_
 
+import hudson.Util;
 pipeline {
   parameters {
-         booleanParam(name: 'PUBLISH', defaultValue: false, description: 'Publish component to registry.')
-  
+        booleanParam(name: 'OIS_SCAN', defaultValue: false, description: 'OIS SwA Scans')
+        booleanParam(name: 'PUBLISH', defaultValue: false, description: 'Publish component to registry.')
   }
   agent {
     kubernetes {
       label 'mobile-framework-js-build'
-      defaultContainer 'maven'
+      defaultContainer 'buildtools'
       yaml """
 apiVersion: v1
 kind: Pod
@@ -23,8 +23,18 @@ spec:
     command:
     - cat
     tty: true
-  - name: maven
-    image: ${env.MAVEN_JDK11_BUILD_IMAGE}
+  - name: jnlp
+    securityContext:
+      runAsUser: 10000
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: 2
+      requests:
+        memory: 1Gi
+        cpu: 1
+  - name: buildtools
+    image: ${env.BROWSERTEST_IMAGE}
     volumeMounts:
     - name: shared-data
       mountPath: /pod-data
@@ -34,65 +44,41 @@ spec:
     command:
     - cat
     tty: true
-  - name: docker
-    image: docker:18.06
-    env:
-    - name: DOCKER_HOST
-      value: tcp://localhost:2375
-    command:
-    - cat
-    tty: true
-  - name: k8-deploy
-    image: ${env.K8_DEPLOY_IMAGE}
-    command:
-    - cat
-    tty: true
-  - name: dind-daemon
-    image: ${env.DIND_IMAGE}
-    securityContext:
-      privileged: true
-    args:
-    - --storage-driver=overlay2
-    ports:
-    - containerPort: 2375
-    volumeMounts:
-    - name: docker-graph-storage
-      mountPath: /var/lib/docker
-    tty: true
+  ${scanhub.SCANHUB_CONTAINERS}
   imagePullSecrets:
   - name: ${env.IMAGE_PULL_SECRET}
   volumes:
-  - name: docker-graph-storage
-    emptyDir: {}
   - name: shared-data
     emptyDir: {}
+  - name: docker-graph-storage
+    emptyDir: {}
 """
-    }
-  }
+    } // kubernetes
+  } // agent
 
   environment {
-      NAMESPACE = "${env.SHAREDSERVICESNAMESPACE}"
-      BUILD_TYPE = 'veteran'
       VERSION = "1.0.0"
       SERVICE_NAME = 'mobile-framework-js'
       DTR_URL = "${env.DTR_URL}"
       DTR_DIR = "/${env.DTR_DIR}"
       PATH_TO_APP = ""
       REPORTS_URL = "coderepo.mobilehealth.va.gov/scm/msl/quality-reports.git"
-
       CNESREPORT_JAR = "${env.CNESREPORT_JAR}"
       CNES_JAR_LOCATION = "${env.CNES_JAR_LOCATION}"      
   }
 
+  triggers { cron(scanhubCron()) }
+
   stages {
-    stage('Start') {
+
+    stage('Initialize CodeQL') {
+      when { expression { params.OIS_SCAN || isScanhubCron() } }
       steps {
-         // send build started notifications
-         slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${VERSION})")
+        initCodeQL("javascript")
       }
     }
 
-    stage('Test') {
+ stage('Test') {
       steps {
         withCredentials([
           string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
@@ -130,7 +116,7 @@ spec:
       }
     }
 
-    stage('Sonar Scan') {
+     stage('Sonar Scan') {
       steps {
         withCredentials([
           string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
@@ -157,7 +143,7 @@ spec:
               }
             }
           }
-          container('maven') {
+          container('buildtools') {
             dir('./') {
                 /* Download the CNES Report Generation Tool */
                 sh "curl -u ${VA_NEXUS_USER}:${VA_NEXUS_PWD} ${CNES_JAR_LOCATION}/${CNESREPORT_JAR} -O"
@@ -186,28 +172,29 @@ spec:
       }
     }
 
-    stage('Quality Gate') {
+    stage('Build and Test') {
       steps {
-        withCredentials([
-          string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
-          string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER'),
-          string(credentialsId: 'MAP_DTR_PWD', variable: 'MAP_DTR_PWD'),
-          string(credentialsId: 'MAP_DTR_USER', variable: 'MAP_DTR_USER'),
-          string(credentialsId: 'VA_GL_PWD', variable: 'VA_GL_PWD'),
-          string(credentialsId: 'VA_GL_USER', variable: 'VA_GL_USER'),
-          string(credentialsId: 'MAP_SONARQUBE_API', variable: 'MAP_SONARQUBE_API'),
-          usernamePassword(credentialsId: '76ec1690-dbb5-49a5-82b3-df29b41d60ba',  passwordVariable: 'VA_BITBT_PWD', usernameVariable: 'VA_BITBT_USER')
-          ]) {
-            container('maven') {
+        script {
+          withCredentials([
+                           string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
+                           string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER'),
+                           string(credentialsId: 'DTR_USER', variable: 'DTR_USER'),
+                           string(credentialsId: 'DTR_PWD', variable: 'DTR_PWD')
+                          ]) {
+            container('buildtools') {
+              sh "chmod +x ./build.sh"              
+            } // container
+          } // withCredentials
+        } // script
+      } // steps
+    } // stage
 
-              timeout(time: 5, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline:  true
-              }
-
-            }
-        } //withCredentials
-      } //steps
-    } //stage
+    stage('OIS SwA') {
+      when { expression { params.OIS_SCAN } }
+      steps {
+        oisScan("javascript", "RIPM")
+      }
+    }
 
     stage('Publish') {
       when {
@@ -221,8 +208,8 @@ spec:
                            string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
                            string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER')
                           ]) {
-            container('maven') {
-              sh './publish.sh'
+            container('buildtools') {
+              sh 'chmod +x ./publish.sh'
             } // container
           } // withCredentials
         } // script
@@ -233,13 +220,6 @@ spec:
   post {
     always {
       cleanWs() /* clean up our workspace */
-    }
-    success {
-      slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${VERSION})")
-    }
-
-    failure {
-      slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${VERSION})")
-    }
-  }
-}
+    } // always
+  } // post
+} // pipeline
