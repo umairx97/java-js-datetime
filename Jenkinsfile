@@ -8,7 +8,7 @@ pipeline {
   }
   agent {
     kubernetes {
-      label 'mobile-framework-js-build'
+      label 'mobile-framework-js'
       defaultContainer 'buildtools'
       yaml """
 apiVersion: v1
@@ -18,11 +18,6 @@ metadata:
     image-build: mobile-framework-js
 spec:
   containers:
-  - name: node
-    image: node:16.15.0
-    command:
-    - cat
-    tty: true
   - name: jnlp
     securityContext:
       runAsUser: 10000
@@ -57,15 +52,11 @@ spec:
   } // agent
 
   environment {
-      VERSION = "1.0.0"
-      SERVICE_NAME = 'mobile-framework-js'
-      DTR_URL = "${env.DTR_URL}"
-      DTR_DIR = "/${env.DTR_DIR}"
-      PATH_TO_APP = ""
-      REPORTS_URL = "coderepo.mobilehealth.va.gov/scm/msl/quality-reports.git"
-      CNESREPORT_JAR = "${env.CNESREPORT_JAR}"
-      CNES_JAR_LOCATION = "${env.CNES_JAR_LOCATION}"      
-  }
+    SERVICE_NAME = "mobile-framework-js"
+    SERVICE_VERSION = "1.0.0"
+    BRANCH_NAME = "${env.BRANCH_NAME}"
+    REPORTS_REPO = "coderepo.mobilehealth.va.gov/scm/msl/quality-reports.git"
+  } // environment
 
   triggers { cron(scanhubCron()) }
 
@@ -75,100 +66,6 @@ spec:
       when { expression { params.OIS_SCAN || isScanhubCron() } }
       steps {
         initCodeQL("javascript")
-      }
-    }
-
- stage('Test') {
-      steps {
-        withCredentials([
-          string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
-          string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER'),
-          string(credentialsId: 'MAP_DTR_PWD', variable: 'MAP_DTR_PWD'),
-          string(credentialsId: 'MAP_DTR_USER', variable: 'MAP_DTR_USER'),
-          string(credentialsId: 'VA_GL_PWD', variable: 'VA_GL_PWD'),
-          string(credentialsId: 'VA_GL_USER', variable: 'VA_GL_USER'),
-          usernamePassword(credentialsId: '76ec1690-dbb5-49a5-82b3-df29b41d60ba',  passwordVariable: 'VA_BITBT_PWD', usernameVariable: 'VA_BITBT_USER')
-          ]) {
-            container('node') {
-              dir('./') {
-                sh """
-                  npm install
-                  npm run coverage
-                """
-
-                archiveArtifacts artifacts: "coverage/*"
-
-                sh """
-                  git clone https://${VA_BITBT_USER}:${VA_BITBT_PWD}@${REPORTS_URL} || true
-                  git config --global user.email user@va.gov
-                  git config --global user.name ${VA_BITBT_USER}
-                  mkdir -p ./quality-reports/${SERVICE_NAME}-v${VERSION}
-                  echo "mkdir -p -m a=rw ./quality-reports/${SERVICE_NAME}-v${VERSION}"
-                  cp coverage/tmp/*.json quality-reports/${SERVICE_NAME}-v${VERSION}
-                  cd quality-reports
-                  git add * && git commit -m 'new test report' && git push --set-upstream origin master
-                  cd ..
-                  rm -fr quality-reports
-                """
-              }
-            }
-        }
-      }
-    }
-
-     stage('Sonar Scan') {
-      steps {
-        withCredentials([
-          string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
-          string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER'),
-          string(credentialsId: 'MAP_DTR_PWD', variable: 'MAP_DTR_PWD'),
-          string(credentialsId: 'MAP_DTR_USER', variable: 'MAP_DTR_USER'),
-          string(credentialsId: 'VA_GL_PWD', variable: 'VA_GL_PWD'),
-          string(credentialsId: 'VA_GL_USER', variable: 'VA_GL_USER'),
-          string(credentialsId: 'MAP_SONARQUBE_API', variable: 'MAP_SONARQUBE_API'),
-          usernamePassword(credentialsId: '76ec1690-dbb5-49a5-82b3-df29b41d60ba',  passwordVariable: 'VA_BITBT_PWD', usernameVariable: 'VA_BITBT_USER')
-        ]) {
-          container('node') {
-            dir('./') {
-              withSonarQubeEnv('SonarQube') {
-                /* Run the sonar scan */
-                sh """
-                  npm install
-                  npm run coverage
-                """
-                
-                archiveArtifacts artifacts: "coverage/*"
-
-                sh "node_modules/sonarqube-scanner/src/bin/sonar-scanner -Dsonar.sources=src -Dsonar.tests=src/tests -Dsonar.test.inclusions=mobile-framework-js/src/tests -Dsonar.scm.exclusions.disabled=true  -Dsonar.projectName=mobile-framework-js -Dsonar.projectKey=mobile-framework-js -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${MAP_SONARQUBE_API} -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info -Dsonar.clover.reportPath=coverage/clover.xml"
-              }
-            }
-          }
-          container('buildtools') {
-            dir('./') {
-                /* Download the CNES Report Generation Tool */
-                sh "curl -u ${VA_NEXUS_USER}:${VA_NEXUS_PWD} ${CNES_JAR_LOCATION}/${CNESREPORT_JAR} -O"
-                /* Create a Report of the Sonar Results */
-                sh "java -jar ${CNESREPORT_JAR} -t ${MAP_SONARQUBE_API} -s ${SONARQUBE_URL} -p mobile-framework-js"
-                /* Archive the report */
-                archiveArtifacts artifacts: "*analysis-report.md"
-                /* Push report to bitbucket */
-                /* Archive the report */
-                archiveArtifacts artifacts: "*analysis-report.md"
-                /* Push report to bitbucket */
-                sh """
-                  git clone https://${VA_BITBT_USER}:${VA_BITBT_PWD}@${REPORTS_URL} || true
-                  git config --global user.email user@va.gov
-                  git config --global user.name ${VA_BITBT_USER}
-                  mkdir -p ./quality-reports/${SERVICE_NAME}-v${VERSION}
-                  cp *report.md ./quality-reports/${SERVICE_NAME}-v${VERSION}
-                  cd quality-reports
-                  git add * && git commit -m 'new analysis report' && git push --set-upstream origin master
-                  cd ..
-                  rm -fr quality-reports
-                """
-            }
-          }
-        }
       }
     }
 
@@ -182,12 +79,59 @@ spec:
                            string(credentialsId: 'DTR_PWD', variable: 'DTR_PWD')
                           ]) {
             container('buildtools') {
-              sh "chmod +x ./build.sh"              
+              sh 'chmod +x ./build.sh'
             } // container
           } // withCredentials
         } // script
       } // steps
     } // stage
+
+    stage('Sonar Scan') {
+      steps {
+        script {
+          withCredentials([
+                           string(credentialsId: 'VA_NEXUS_PWD', variable: 'VA_NEXUS_PWD'),
+                           string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER'),
+                           string(credentialsId: 'VA_BITBT_PWD', variable: 'VA_BITBT_PWD'),
+                           string(credentialsId: 'VA_BITBT_USER', variable: 'VA_BITBT_USER'),
+                           string(credentialsId: 'MAP_SONARQUBE_API', variable: 'MAP_SONARQUBE_API')
+                          ]) {
+            container('buildtools') {
+              withSonarQubeEnv ('SonarQube') {
+                /* Sonar scan */
+                sh '''
+                  export NODE_TLS_REJECT_UNAUTHORIZED=0
+                  export NODE_EXTRA_CA_CERTS='/etc/ssl/certs/ca-bundle.crt'
+                  export SONAR_SCANNER_OPTS='-Djavax.net.ssl.trustStore=/usr/java/latest/lib/security/cacerts'
+                  npm run sonar-scanner -- -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${MAP_SONARQUBE_API} -DskipTests
+                '''
+                
+		/* Push report to repo */
+                sh '''
+                  curl -u ${VA_NEXUS_USER}:${VA_NEXUS_PWD} ${CNES_JAR_LOCATION}/${CNESREPORT_JAR} -O
+                  java -jar ${CNESREPORT_JAR} -t ${MAP_SONARQUBE_API} -s ${SONARQUBE_URL} -p ${SERVICE_NAME} -b ${BRANCH_NAME}
+
+                  git clone https://${VA_BITBT_USER}:${VA_BITBT_PWD}@${REPORTS_REPO}
+                  git config --global user.email noemail
+                  git config --global user.name Jenkins
+
+                  REPORT_DIR=quality-reports/$SERVICE_NAME/$SERVICE_VERSION
+                  [ -d $REPORT_DIR ] || mkdir -p $REPORT_DIR
+
+                  cp *report.md $REPORT_DIR/${SERVICE_NAME}-${SERVICE_VERSION}-sonar.md
+
+                  cd quality-reports
+                  git add .
+                  DATE=$(date "+%Y%m%d-%H%M%S")
+                  git commit -m "$VAMF_ENVIRONMENT pipeline Sonar report for $SERVICE_NAME:$SERVICE_VERSION $DATE" || true
+                  git push --set-upstream origin master
+                '''
+              } // withSonarQubeEnv
+            } // container
+          } // withCredentials
+        } // script
+      } // steps
+    } // stage Sonar Scan
 
     stage('OIS SwA') {
       when { expression { params.OIS_SCAN } }
