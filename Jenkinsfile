@@ -56,6 +56,8 @@ spec:
     SERVICE_VERSION = "1.0.0"
     BRANCH_NAME = "${env.BRANCH_NAME}"
     REPORTS_REPO = "coderepo.mobilehealth.va.gov/scm/msl/quality-reports.git"
+    CNESREPORT_JAR = "${env.CNESREPORT_JAR}"
+    CNES_JAR_LOCATION = "${env.CNES_JAR_LOCATION}"
   } // environment
 
   triggers { cron(scanhubCron()) }
@@ -86,7 +88,7 @@ spec:
       } // steps
     } // stage
 
-    stage('Sonar Scan') {
+     stage('Sonar Scan') {
       steps {
         script {
           withCredentials([
@@ -106,8 +108,8 @@ spec:
                   npm install
                   node_modules/sonarqube-scanner/src/bin/sonar-scanner -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${MAP_SONARQUBE_API} -DskipTests
                 '''
-                
-		/* Push report to repo */
+
+                /* Push report to repo */
                 sh '''
                   curl -u ${VA_NEXUS_USER}:${VA_NEXUS_PWD} ${CNES_JAR_LOCATION}/${CNESREPORT_JAR} -O
                   java -jar ${CNESREPORT_JAR} -t ${MAP_SONARQUBE_API} -s ${SONARQUBE_URL} -p ${SERVICE_NAME} -b ${BRANCH_NAME}
@@ -134,6 +136,7 @@ spec:
       } // steps
     } // stage Sonar Scan
 
+
     stage('OIS SwA') {
       when { expression { params.OIS_SCAN } }
       steps {
@@ -154,7 +157,8 @@ spec:
                            string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER')
                           ]) {
             container('buildtools') {
-              sh 'chmod +x ./publish.sh'
+              sh 'chmod +x ./set-npm-registry.sh'
+              sh 'npm publish --registry https://nexus.mobilehealth.va.gov/repository/npm-internal/'
             } // container
           } // withCredentials
         } // script
