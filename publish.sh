@@ -12,4 +12,5 @@ always-auth=true
 strict-ssl=false" > .npmrc
 
 nvm install v20.12.1
+npm pack
 npm publish --verbose
