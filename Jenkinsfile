@@ -103,6 +103,7 @@ spec:
                   export NODE_TLS_REJECT_UNAUTHORIZED=0
                   export NODE_EXTRA_CA_CERTS='/etc/ssl/certs/ca-bundle.crt'
                   export SONAR_SCANNER_OPTS='-Djavax.net.ssl.trustStore=/usr/java/latest/lib/security/cacerts'
+                  npm install
                   node_modules/sonarqube-scanner/src/bin/sonar-scanner -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.token=${MAP_SONARQUBE_API} -DskipTests
                 '''
                 
