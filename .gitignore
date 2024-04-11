@@ -1,4 +1,10 @@
 node_modules
+conf
+quality-reports*
+va-mobile*
+2024*
+Jenkinfile
+cnes-report
 .nyc_output
 coverage
 ./*
