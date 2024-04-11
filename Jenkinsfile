@@ -3,7 +3,7 @@
 import hudson.Util;
 pipeline {
   parameters {
-        booleanParam(name: 'OIS_SCAN', defaultValue: false, description: 'OIS SwA Scans')
+        //booleanParam(name: 'OIS_SCAN', defaultValue: false, description: 'OIS SwA Scans')
         booleanParam(name: 'PUBLISH', defaultValue: false, description: 'Publish component to registry.')
   }
   agent {
@@ -157,8 +157,8 @@ spec:
                            string(credentialsId: 'VA_NEXUS_USER', variable: 'VA_NEXUS_USER')
                           ]) {
             container('buildtools') {
-              sh 'chmod +x ./set-npm-registry.sh'
-              sh 'npm publish --registry https://nexus.mobilehealth.va.gov/repository/npm-internal/'
+              sh 'chmod +x ./publish.sh'
+              sh './publish.sh'
             } // container
           } // withCredentials
         } // script
