@@ -25,7 +25,7 @@ email=nobody
 always-auth=true
 strict-ssl=false" > .npmrc
 
-echo "${loc} Exit."
 nvm install v20.12.1
 npm pack
 npm publish --verbose
+echo "${loc} Exit."
