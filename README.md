@@ -1,4 +1,4 @@
-# \<mobile-framework-js>
+# mobile-framework-js
 
 This mobile-framework is a library that can parse and format the various date formats that are commonly encountered across the VA Mobile environment.
 
@@ -23,25 +23,18 @@ Follow the instruction below depending on your application framework.
 
 ```html
 <script type="module">
-  import '@va-mobile/mobile-framework-js/index.js';
+  import '@va-mobile/mobile-framework-js';
 </script>
 ```
 
 ### React
 Install the package `npm i --save @va-mobile/mobile-framework-js`
 
-
-## Local development with `web-dev-server`
-
-```bash
-npm start
-```
 ## Publish
 
 To test the package locally
 
 ```bash
-npm run build
 npm link
 ```
 

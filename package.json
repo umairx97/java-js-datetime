@@ -5,7 +5,6 @@
    "publishConfig": {
     "registry": "https://nexus.mobilehealth.va.gov/repository/npm-internal/"
   },
-  "license": "MIT",
   "main": "./src/index.js",
   "scripts": {
     "test": "NODE_ENV=test tape ./src/tests/*",
