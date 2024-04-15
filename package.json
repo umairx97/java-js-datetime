@@ -1,6 +1,6 @@
 {
   "name": "@va-mobile/mobile-framework-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Library for parsing/formatting/converting Date/Time values, handling various formats.",
    "publishConfig": {
     "registry": "https://nexus.mobilehealth.va.gov/repository/npm-internal/"
